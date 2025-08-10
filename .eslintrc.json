@@ -1,0 +1,36 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "extends": ["next/core-web-vitals", "eslint-config-love", "eslint-config-next", "eslint-config-prettier"],
+  "plugins": [
+    "import",
+    "jsx-a11y",
+    "n",
+    "promise",
+    "react",
+    "react-hooks",
+    "security",
+    "simple-import-sort",
+    "sonarjs"
+  ],
+  "rules": {
+    "sonarjs/no-duplicate-string": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/consistent-type-assertions": "off",
+    "@typescript-eslint/no-invalid-void-type": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "react-hooks/exhaustive-deps": "off"
+  },
+  "settings": {
+    "react": {
+      "version": "18.2.0"
+    }
+  }
+}
