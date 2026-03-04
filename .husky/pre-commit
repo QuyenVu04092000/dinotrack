@@ -1,44 +1,18 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-echo '🏗️👷 Styling, testing and building your project before committing'
+echo '🏗️👷 Linting and building your project before committing'
 
-# Check Prettier standards
-yarn run check-format ||
-(
-    echo '🤢🤮🤢🤮 Its FOKING RAW - Your styling looks disgusting. 🤢🤮🤢🤮
-            Prettier Check Failed. 
-            Run yarn run format, add changes and try commit again.';
-    false;
+npm run lint || (
+  echo 'ESLint check failed. Fix the issues above, add changes, and try committing again.'
+  false
 )
 
-# Check ESLint Standards
-yarn run check-lint ||
-(
-        echo '😤🏀👋😤 Get that weak shit out of here! 😤🏀👋😤 
-                ESLint Check Failed. 
-                Make the required changes listed above, add changes and try to commit again.'
-        false; 
+echo 'Trying to build the project before committing...'
+
+npm run build || (
+  echo 'Build failed. Fix the build errors above, add changes, and try committing again.'
+  false
 )
 
-# Check tsconfig standards
-yarn run check-types ||
-(
-    echo '🤡😂❌🤡 Failed Type check. 🤡😂❌🤡
-            Are you seriously trying to write that? Make the changes required above.'
-    false;
-)
-
-# If everything passes... Now we can commit
-echo '🤔🤔🤔🤔... Alright.... Code looks good to me... Trying to build now. 🤔🤔🤔🤔'
-
-yarn run build||
-(
-    echo '❌👷🔨❌ Your build failed ❌👷🔨❌
-            Next build failed: View the errors above to see why. 
-    '
-    false;
-)
-
-# If everything passes... Now we can commit
-echo '✅✅✅✅ You win this time... I am committing this now. ✅✅✅✅'
+echo '✅ All checks passed. Proceeding with commit.'

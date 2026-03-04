@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mm-background: 0 70 176; /* brand blue #0046B0 */
+  --mm-foreground: 248 250 252; /* slate-50 */
+  --mm-primary: 56 189 248; /* sky-400 */
+  --mm-primary-foreground: 15 23 42; /* slate-900 */
+  --mm-muted: 15 23 42; /* slate-900 */
+  --mm-muted-foreground: 148 163 184; /* slate-400 */
+  --mm-border: 30 64 175; /* indigo-700 */
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Edge */
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  background: none;
+  border: none;
+}
+
+/* Chart.js tooltip styling for MomoBarChart */
+.chartjs-tooltip {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}

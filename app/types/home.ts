@@ -1,0 +1,47 @@
+import type { TransactionType } from "@features/transactions/transaction.types";
+import type { Category, SubCategory } from "./category";
+import type { AuthUser } from "./auth";
+
+export interface UseHomeResult {
+  displayName: string | undefined;
+  formattedTodaySpent: string;
+  activeType: TransactionType;
+  setActiveType: (type: TransactionType) => void;
+  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  handleOpenDateModal: () => void;
+  formattedDateLabel: string;
+  isExpense: boolean;
+  selectedCategory: SubCategory;
+  handleCategorySelectChange: (category: SubCategory) => void;
+  handleQuickCategoryClick: (category: SubCategory) => void;
+  categoriesLoading: boolean;
+  categoriesError: string | null;
+  categories: Category[];
+  submitError: string | null;
+  submitSuccess: string | null;
+  isSubmitting: boolean;
+  isDateModalOpen: boolean;
+  goToPreviousMonth: () => void;
+  currentMonth: Date;
+  goToNextMonth: () => void;
+  weekDayHeaders: string[];
+  firstDayOfWeek: number;
+  daysInMonth: number[];
+  calendarYear: number;
+  calendarMonth: number;
+  selectedDate: string;
+  todayLocalIso: string;
+  handleSelectedDateFromCalendar: (day: number) => void;
+  handleCloseDateModal: () => void;
+  setSelectedDate: (date: string) => void;
+  setCurrentMonth: (month: Date) => void;
+  setIsDateModalOpen: (isOpen: boolean) => void;
+  amountValue: string;
+  handleAmountChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  user: AuthUser | null;
+  isCategoryModalOpen: boolean;
+  setIsCategoryModalOpen: (isOpen: boolean) => void;
+  quickSubCategories: SubCategory[];
+  quickSubsLoading: boolean;
+  quickSubsError: string | null;
+}

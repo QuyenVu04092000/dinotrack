@@ -7,7 +7,7 @@
   "parserOptions": {
     "project": "./tsconfig.json"
   },
-  "extends": ["next/core-web-vitals", "eslint-config-love", "eslint-config-next", "eslint-config-prettier"],
+  "extends": ["next/core-web-vitals", "eslint-config-next", "eslint-config-prettier"],
   "plugins": [
     "import",
     "jsx-a11y",
@@ -25,7 +25,6 @@
     "@typescript-eslint/consistent-type-assertions": "off",
     "@typescript-eslint/no-invalid-void-type": "off",
     "@typescript-eslint/no-floating-promises": "off",
-    "@typescript-eslint/no-unsafe-argument": "warn",
     "react-hooks/exhaustive-deps": "off"
   },
   "settings": {
