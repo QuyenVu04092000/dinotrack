@@ -7,6 +7,7 @@ import { useReport } from "app/hooks/useReport";
 import { useAuthContext } from "app/context/AuthContext";
 import { formatVietnameseCurrency, formatDateDDMMYYYY } from "app/utilities/common/functions";
 import { DonutChart } from "app/components/DonutChart";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function ReportPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function ReportPage() {
     >
       {/* Pattern Background */}
       <div className="absolute left-[-49px] top-0 h-[794.752px] w-full mix-blend-lighten">
-        <Image src="/images/background.png" alt="" fill className="object-cover" />
+        <Image src={imagePath("/images/background.png")} alt="" fill className="object-cover" />
       </div>
 
       {/* Main Content */}
@@ -58,7 +59,7 @@ export default function ReportPage() {
             <div
               className="absolute top-0 right-0 w-1/2 h-full rounded-2xl"
               style={{
-                backgroundImage: "url('/images/balance_background.png')",
+                backgroundImage: `url('${imagePath("/images/balance_background.png")}')`,
                 backgroundSize: "contain",
                 backgroundPosition: "right",
                 backgroundRepeat: "no-repeat",
@@ -71,7 +72,7 @@ export default function ReportPage() {
             <div
               className="absolute top-0 right-0 w-1/2 h-full rounded-2xl"
               style={{
-                backgroundImage: "url('/images/spent_background.png')",
+                backgroundImage: `url('${imagePath("/images/spent_background.png")}')`,
                 backgroundSize: "contain",
                 backgroundPosition: "right",
                 backgroundRepeat: "no-repeat",
@@ -111,7 +112,7 @@ export default function ReportPage() {
                   reportType === "expense" ? "text-[#0046B0]" : "text-[#597397]"
                 }`}
                 style={{
-                  backgroundImage: reportType === "expense" ? "url('/images/bg_select.png')" : "",
+                  backgroundImage: reportType === "expense" ? `url('${imagePath("/images/bg_select.png")}')` : "",
                   backgroundSize: "cover",
                   backgroundPosition: "right",
                   backgroundRepeat: "no-repeat",
@@ -127,7 +128,7 @@ export default function ReportPage() {
                   reportType === "income" ? "text-[#0046B0]" : "text-[#597397]"
                 }`}
                 style={{
-                  backgroundImage: reportType === "income" ? "url('/images/bg_select.png')" : "",
+                  backgroundImage: reportType === "income" ? `url('${imagePath("/images/bg_select.png")}')` : "",
                   backgroundSize: "cover",
                   backgroundPosition: "right",
                   backgroundRepeat: "no-repeat",

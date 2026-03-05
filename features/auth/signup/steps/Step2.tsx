@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "app/context/AuthContext";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { AuthResponse } from "app/types/auth";
 
 interface StepProps {
@@ -40,7 +41,7 @@ export default function Step2({ goNext, goBack }: StepProps) {
     >
       {/* Background pattern (reusing app background image) */}
       <div className="pointer-events-none absolute inset-0 opacity-40">
-        <Image src="/images/background.png" alt="" fill priority className="object-contain" />
+        <Image src={imagePath("/images/background.png")} alt="" fill priority className="object-contain" />
       </div>
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center pt-24 pb-10 px-4">
@@ -54,7 +55,7 @@ export default function Step2({ goNext, goBack }: StepProps) {
           <div
             className="mb-6 h-64 w-64 absolute left-1/2 -top-10 -translate-x-1/2 -translate-y-1/2 -z-10"
             style={{
-              backgroundImage: "url('/images/fireworks.png')",
+              backgroundImage: `url('${imagePath("/images/fireworks.png")}')`,
               backgroundSize: "contain",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
@@ -63,7 +64,7 @@ export default function Step2({ goNext, goBack }: StepProps) {
             <Image
               width={150}
               height={117}
-              src="/images/success_bg.png"
+              src={imagePath("/images/success_bg.png")}
               alt="Chúc mừng đăng ký thành công"
               className="object-contain absolute left-1/2 top-28 -translate-x-1/2 -translate-y-1/2"
             />

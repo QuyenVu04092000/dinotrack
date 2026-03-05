@@ -12,6 +12,7 @@ import { useCategories } from "app/hooks/useCategories";
 import { formatVietnameseCurrency, formatDateDDMMYYYY, formatTimeHHMM } from "app/utilities/common/functions";
 import Image from "next/image";
 import { useTransactionsPage } from "app/hooks/useTransactionsPage";
+import { imagePath } from "app/utilities/constants/common/assets";
 import type { GroupedTransaction } from "app/types/transactionsPage";
 
 export default function TransactionsPage() {
@@ -62,7 +63,7 @@ export default function TransactionsPage() {
       {/* Header */}
       <div className="relative bg-[#0046B0] h-[95px] rounded-bl-[20px] rounded-br-[20px]">
         <div className="absolute left-[-49px] top-0 h-[794.752px] w-[473px] mix-blend-lighten">
-          <Image src="/images/background.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/background.png")} alt="" fill className="object-cover" />
         </div>
 
         <div className="relative z-10 w-full flex items-center justify-between gap-3 px-4 pt-[55px]">

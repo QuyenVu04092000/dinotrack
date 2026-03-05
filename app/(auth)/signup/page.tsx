@@ -1,6 +1,7 @@
 "use client";
 
 import SignupFlow from "@features/auth/signup/SignupFlow";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function SignupPage() {
   return (
@@ -12,7 +13,7 @@ export default function SignupPage() {
         style={{
           position: "fixed",
           inset: 0,
-          backgroundImage: "url('/images/background.png')",
+          backgroundImage: `url('${imagePath("/images/background.png")}')`,
           backgroundSize: "contain",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

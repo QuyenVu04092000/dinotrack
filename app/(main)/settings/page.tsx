@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "app/hooks/useSettings";
 import { useAuthContext } from "app/context/AuthContext";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -33,7 +34,10 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="relative bg-[#0046B0] h-[95px] rounded-bl-[20px] rounded-br-[20px]">
         <div className="absolute left-[-49px] top-0 h-[794.752px] w-full mix-blend-lighten">
-          <div className="h-full w-full bg-[url('/images/background.png')] bg-cover bg-center" />
+          <div
+            className="h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: `url('${imagePath("/images/background.png")}')` }}
+          />
         </div>
         <div className="relative z-10 w-full flex items-center justify-between gap-3 px-4 pt-[55px]">
           <h1 className="text-lg font-semibold leading-[1.5] text-white">Cài đặt</h1>

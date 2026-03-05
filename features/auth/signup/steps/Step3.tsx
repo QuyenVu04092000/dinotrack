@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "app/context/AuthContext";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { authApi } from "app/services/authApi";
 import { formatAmountInput, parseAmountInput } from "app/utilities/common/functions";
 import { extractErrorMessage } from "app/lib/apiClient";
@@ -75,7 +76,7 @@ export default function Step3({ goNext, goBack }: StepProps) {
     >
       {/* Background pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-40">
-        <Image src="/images/background.png" alt="" fill priority className="object-contain" />
+        <Image src={imagePath("/images/background.png")} alt="" fill priority className="object-contain" />
       </div>
 
       <div className="relative z-10 flex w-full flex-col">
@@ -107,7 +108,7 @@ export default function Step3({ goNext, goBack }: StepProps) {
           <div className="relative mb-8 h-36 w-full">
             <div className="absolute left-0 top-12">
               <Image
-                src="/images/create_bg.png"
+                src={imagePath("/images/create_bg.png")}
                 alt="Nhân vật Doni"
                 width={155}
                 height={106}
@@ -118,7 +119,7 @@ export default function Step3({ goNext, goBack }: StepProps) {
             <div
               className="absolute right-24 -top-8 px-4 py-2 w-48 h-28 "
               style={{
-                backgroundImage: "url('/images/create_tip.png')",
+                backgroundImage: `url('${imagePath("/images/create_tip.png")}')`,
                 backgroundSize: "contain",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatVietnameseCurrency } from "app/utilities/common/functions";
 import { useBudgetsList } from "app/hooks/useBudgetsList";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function ListBudgets() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function ListBudgets() {
       {/* Header */}
       <div className="relative h-[95px] w-full overflow-hidden rounded-b-[20px] bg-[#0046B0]">
         <div className="absolute h-full w-full mix-blend-soft-light">
-          <Image src="/images/header.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/header.png")} alt="" fill className="object-cover" />
         </div>
         <div className="absolute left-1/2 bottom-2 flex w-full -translate-x-1/2 items-center justify-between gap-2 px-4">
           <h1 className="flex-1 text-lg font-semibold leading-[1.5] text-white">Ngân sách</h1>

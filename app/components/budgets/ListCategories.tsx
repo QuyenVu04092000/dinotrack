@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useBudgets } from "app/hooks/useBudgets";
 import { useRouter } from "next/navigation";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { SubCategory } from "app/types/category";
 import type { ListCategoriesProps } from "app/types/budgets";
 
@@ -17,7 +18,7 @@ export default function ListCategories({ setCategory }: ListCategoriesProps) {
       <div className="relative h-[95px] w-full overflow-hidden rounded-b-[20px] bg-[#0046B0]">
         {/* Pattern background */}
         <div className="absolute mix-blend-soft-light w-full h-full">
-          <Image src="/images/header.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/header.png")} alt="" fill className="object-cover" />
         </div>
 
         {/* Status Bar Placeholder */}

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSignIn } from "app/hooks/useSignIn";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function HomePage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function HomePage() {
         style={{
           position: "fixed",
           inset: 0,
-          backgroundImage: "url('/images/background.png')",
+          backgroundImage: `url('${imagePath("/images/background.png")}')`,
           backgroundSize: "contain",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -27,7 +28,7 @@ export default function HomePage() {
 
         <div className="mt-6 rounded-3xl bg-white px-6 py-8 text-left shadow-sm relative">
           <div className="absolute top-[-128px] right-9">
-            <Image src="/images/icon.png" alt="Doni" width={160} height={144} />
+            <Image src={imagePath("/images/icon.png")} alt="Doni" width={160} height={144} />
           </div>
           <header className="space-y-3">
             <h1 className="text-2xl font-semibold text-slate-800">

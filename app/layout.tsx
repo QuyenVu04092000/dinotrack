@@ -5,6 +5,7 @@ import { FooterProvider, useFooter } from "./context/FooterContext";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AiChatWidget } from "./components/chat";
+import { imagePath } from "./utilities/constants/common/assets";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathName = usePathname();
@@ -42,7 +43,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                       top: "30%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      backgroundImage: "url('/images/selected_background.png')",
+                      backgroundImage: `url('${imagePath("/images/selected_background.png")}')`,
                       backgroundSize: "80px 75px",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -89,7 +90,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                       top: "30%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      backgroundImage: "url('/images/selected_background.png')",
+                      backgroundImage: `url('${imagePath("/images/selected_background.png")}')`,
                       backgroundSize: "80px 75px",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -136,7 +137,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      backgroundImage: "url('/images/selected_background.png')",
+                      backgroundImage: `url('${imagePath("/images/selected_background.png")}')`,
                       backgroundSize: "80px 75px",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -178,7 +179,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                       top: "30%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      backgroundImage: "url('/images/selected_background.png')",
+                      backgroundImage: `url('${imagePath("/images/selected_background.png")}')`,
                       backgroundSize: "80px 75px",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -225,7 +226,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                       top: "30%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
-                      backgroundImage: "url('/images/selected_background.png')",
+                      backgroundImage: `url('${imagePath("/images/selected_background.png")}')`,
                       backgroundSize: "80px 75px",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",

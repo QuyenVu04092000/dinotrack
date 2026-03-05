@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatVietnameseCurrency, formatTimeHHMM, formatDateDDMMYYYY } from "app/utilities/common/functions";
 import Image from "next/image";
 import { MomoBarChart } from "app/components/MomoBarChart";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { useTransactionCategoryPage } from "app/hooks/useTransactionCategoryPage";
 
 function TransactionCategoryPageInner() {
@@ -48,7 +49,7 @@ function TransactionCategoryPageInner() {
       {/* Header */}
       <div className="relative bg-[#0046B0] h-[60px] rounded-bl-[20px] rounded-br-[20px]">
         <div className="absolute left-[-49px] top-0 h-[794.752px] w-full mix-blend-lighten">
-          <Image src="/images/background.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/background.png")} alt="" fill className="object-cover" />
         </div>
 
         <div className="relative z-10 w-full flex items-center justify-between gap-3 px-4 pt-4 overflow-visible">

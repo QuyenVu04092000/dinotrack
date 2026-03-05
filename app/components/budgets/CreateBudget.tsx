@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import { useCreateBudget } from "app/hooks/useCreateBudget";
 import { SubCategory } from "app/types/category";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { useFooter } from "app/context/FooterContext";
 import type { CreateBudgetProps } from "app/types/budgets";
 
@@ -34,7 +35,7 @@ export default function CreateBudget({ category, setCategory }: CreateBudgetProp
       <div className="relative h-[95px] w-full overflow-hidden rounded-b-[20px] bg-[#0046B0]">
         {/* Pattern background */}
         <div className="absolute h-full w-full mix-blend-soft-light">
-          <Image src="/images/header.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/header.png")} alt="" fill className="object-cover" />
         </div>
 
         {/* Status Bar Placeholder */}

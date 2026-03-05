@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { useCreateCategory } from "app/hooks/useCreateCategory";
+import { imagePath } from "app/utilities/constants/common/assets";
 import { useFooter } from "app/context/FooterContext";
 
 export default function CreateCategoryPage() {
@@ -41,7 +42,7 @@ export default function CreateCategoryPage() {
       <div className="relative h-[95px] w-full overflow-hidden rounded-b-[20px] bg-[#0046B0]">
         {/* Pattern background */}
         <div className="absolute left-[11.61px] top-[-394.84px] h-[509.668px] w-[347.389px] mix-blend-soft-light opacity-50">
-          <Image src="/images/background.png" alt="" fill className="object-cover" />
+          <Image src={imagePath("/images/background.png")} alt="" fill className="object-cover" />
         </div>
 
         {/* Status Bar Placeholder */}

@@ -6,6 +6,7 @@ import { useHome } from "app/hooks/useHome";
 import { formatVietnameseCurrency } from "app/utilities/common/functions";
 import { SubCategory } from "app/types/category";
 import { useRouter } from "next/navigation";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 export default function HomePage() {
   const {
@@ -58,7 +59,7 @@ export default function HomePage() {
       className="relative flex min-h-[100vh] justify-center bg-background"
     >
       <div className="absolute inset-0 opacity-40">
-        <Image src="/images/background.png" alt="" fill priority className="object-cover" />
+        <Image src={imagePath("/images/background.png")} alt="" fill priority className="object-cover" />
       </div>
 
       <div className="relative z-10 flex w-full px-4 flex-col pt-7 sm:px-6 mb-[96px]">
@@ -66,7 +67,12 @@ export default function HomePage() {
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-white/60 bg-white">
-              <Image src="/images/avatar.png" alt={`Ảnh đại diện của ${displayName}`} fill className="object-cover" />
+              <Image
+                src={imagePath("/images/avatar.png")}
+                alt={`Ảnh đại diện của ${displayName}`}
+                fill
+                className="object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-semibold text-white">Xin chào, {displayName} 👋</p>
@@ -93,7 +99,7 @@ export default function HomePage() {
             <div
               className="absolute top-0 right-0 w-1/2 h-full rounded-2xl"
               style={{
-                backgroundImage: "url('/images/balance_background.png')",
+                backgroundImage: `url('${imagePath("/images/balance_background.png")}')`,
                 backgroundSize: "contain",
                 backgroundPosition: "right",
                 backgroundRepeat: "no-repeat",
@@ -106,7 +112,7 @@ export default function HomePage() {
             <div
               className="absolute top-0 right-0 w-1/2 h-full rounded-2xl"
               style={{
-                backgroundImage: "url('/images/spent_background.png')",
+                backgroundImage: `url('${imagePath("/images/spent_background.png")}')`,
                 backgroundSize: "contain",
                 backgroundPosition: "right",
                 backgroundRepeat: "no-repeat",

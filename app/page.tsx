@@ -10,8 +10,12 @@ export default function RootPage() {
   }, []);
   return (
     <section aria-label="App home placeholder">
-      <h1 className="text-lg font-semibold">Money Management</h1>
-      <p className="mt-2 text-sm text-mutedForeground">Home screen will be implemented based on Figma designs.</p>
+      {/* spinner from https://loading.io/ */}
+      <div className="flex justify-center items-center h-screen">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
     </section>
   );
 }

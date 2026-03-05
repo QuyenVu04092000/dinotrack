@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRegister } from "app/hooks/useRegister";
+import { imagePath } from "app/utilities/constants/common/assets";
 
 interface StepProps {
   goNext: () => void;
@@ -39,7 +40,7 @@ export default function Step1({ goNext }: StepProps) {
     >
       <div className="relative mt-40 rounded-3xl bg-white px-6 pb-8 pt-12 shadow-sm">
         <div className="absolute -top-32 right-8">
-          <Image src="/images/icon_register.png" alt="Nhân vật Doni chào mừng" width={152} height={152} />
+          <Image src={imagePath("/images/icon_register.png")} alt="Nhân vật Doni chào mừng" width={152} height={152} />
         </div>
 
         <header className="space-y-3">
