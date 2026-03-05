@@ -3,7 +3,7 @@ import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
-const repoName = "financial_management_fe"; // your GitHub repo name
+const repoName = "dinotrack"; // GitHub Pages path → quyenvu04092000.github.io/dinimoney
 
 const baseConfig = {
   reactStrictMode: true,
