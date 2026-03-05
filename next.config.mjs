@@ -2,8 +2,14 @@
 import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === "production";
+const repoName = "financial_management_fe"; // your GitHub repo name
+
 const baseConfig = {
   reactStrictMode: true,
+  output: "export",
+  basePath: isProd ? `/${repoName}` : "",
+  assetPrefix: isProd ? `/${repoName}/` : "",
   // optional: remove deprecated experimental.appDir for Next 14
   // experimental: {
   //   appDir: true,
