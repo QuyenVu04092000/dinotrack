@@ -13,5 +13,5 @@ jobs:
         env:
           HEALTH_URL: ${{ secrets.HEALTH_URL }}
         run: |
-          test -n "https://financial-management-be.onrender.com/health"
+          test -n "${{ secrets.HEALTH_URL }}"
           curl -fsS --retry 3 --retry-all-errors --connect-timeout 5 --max-time 20 "$HEALTH_URL"
