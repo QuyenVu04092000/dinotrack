@@ -12,15 +12,15 @@ jobs:
     steps:
       - name: Call /health
         env:
-          HEALTH_URL: ${{ secrets.HEALTH_URL }}
+          HEALTH_URL: ${{ vars.HEALTH_URL }}
         run: |
           if [ -z "$HEALTH_URL" ]; then
-            echo "::warning::HEALTH_URL secret is not set. Skipping health ping. Add it in Settings → Secrets and variables → Actions to enable."
+            echo "::warning::HEALTH_URL variable is not set. Skipping health ping. Add it in Settings → Secrets and variables → Actions → Variables to enable."
             exit 0
           fi
           echo "Pinging health endpoint ..."
           if ! curl -fsS --retry 1 --connect-timeout 5 --max-time 20 "$HEALTH_URL"; then
-            echo "::error::Health check failed. A 404 usually means HEALTH_URL is wrong or the app has no /health route. Fix the URL in Settings → Secrets (HEALTH_URL) or add a health endpoint."
+            echo "::error::Health check failed. A 404 usually means HEALTH_URL is wrong or the app has no /health route. Fix the URL in Settings → Secrets and variables → Actions → Variables (HEALTH_URL) or add a health endpoint."
             exit 1
           fi
           echo ""
