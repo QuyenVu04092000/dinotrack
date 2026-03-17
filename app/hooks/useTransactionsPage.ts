@@ -356,12 +356,20 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
     [subCategories],
   );
 
-  // Format amount for calendar (e.g., "145k", "5tr")
+  // Format amount for calendar (e.g., "145k", "5tr", 4786000 -> "4.7tr")
   const formatCalendarAmount = (amount: number): string => {
     if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)}tr`;
+      const truncatedMillions = Math.floor((amount / 1000000) * 10) / 10;
+      const millionsLabel = Number.isInteger(truncatedMillions)
+        ? truncatedMillions.toString()
+        : truncatedMillions.toFixed(1);
+      return `${millionsLabel}tr`;
     } else if (amount >= 1000) {
-      return `${Math.round(amount / 1000)}k`;
+      const truncatedThousands = Math.floor((amount / 1000) * 10) / 10;
+      const thousandsLabel = Number.isInteger(truncatedThousands)
+        ? truncatedThousands.toString()
+        : truncatedThousands.toFixed(1);
+      return `${thousandsLabel}k`;
     }
     return amount.toString();
   };

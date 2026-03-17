@@ -53,23 +53,11 @@ export default function HomePage() {
   } = useHome();
   const router = useRouter();
 
-  const isInitialLoading =
-    (categoriesLoading || quickSubsLoading) && !categoriesError && !quickSubsError && !submitError && !submitSuccess;
-
   return (
     <section
       aria-label="Trang chủ Doni sau khi đăng nhập"
       className="relative flex min-h-[100vh] justify-center bg-background"
     >
-      {isInitialLoading && (
-        <div className="pointer-events-auto fixed inset-0 z-40 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div
-            className="h-10 w-10 animate-spin rounded-full border-4 border-[#0046B0] border-t-transparent"
-            aria-hidden="true"
-          />
-          <p className="mt-3 text-sm font-medium text-slate-700">Đang tải trang chủ...</p>
-        </div>
-      )}
       <div className="absolute inset-0 opacity-40">
         <Image src={imagePath("/images/background.png")} alt="" fill priority className="object-cover" />
       </div>
