@@ -7,13 +7,18 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "pipeline": "tsx lib/pipeline.ts",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:e2e": "playwright test"
     },
     "dependencies": {
         "axios": "^1.13.2",
         "canvasjs-react-charts": "^1.0.5",
         "chart.js": "^4.5.1",
         "chartjs-plugin-datalabels": "^2.2.0",
+        "groq-sdk": "^1.2.0",
         "next": "14.2.5",
         "next-pwa": "5.6.0",
         "react": "18.3.1",
@@ -21,12 +26,19 @@
         "react-dom": "18.3.1"
     },
     "devDependencies": {
+        "@playwright/test": "^1.60.0",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
         "@types/node": "20.14.10",
         "@types/react": "18.3.3",
         "@types/react-dom": "18.3.0",
         "@typescript-eslint/eslint-plugin": "^8.56.1",
         "@typescript-eslint/parser": "^8.56.1",
+        "@vitejs/plugin-react": "^4.7.0",
         "autoprefixer": "10.4.19",
+        "axe-playwright": "^2.2.2",
+        "dotenv": "^17.4.2",
         "eslint": "8.57.0",
         "eslint-config-next": "14.2.5",
         "eslint-config-prettier": "^10.1.8",
@@ -35,9 +47,13 @@
         "eslint-plugin-security": "^4.0.0",
         "eslint-plugin-simple-import-sort": "^12.1.1",
         "eslint-plugin-sonarjs": "^4.0.0",
+        "jsdom": "^29.1.1",
+        "playwright": "^1.60.0",
         "postcss": "8.4.39",
         "prettier": "^3.8.1",
         "tailwindcss": "3.4.7",
-        "typescript": "5.5.4"
+        "tsx": "^4.22.3",
+        "typescript": "5.5.4",
+        "vitest": "^4.1.7"
     }
 }
