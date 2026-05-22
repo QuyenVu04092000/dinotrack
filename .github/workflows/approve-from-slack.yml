@@ -1,0 +1,79 @@
+name: Approve or Reject PR (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to approve or reject"
+        required: true
+        type: string
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - approve
+          - reject
+      reviewer:
+        description: "Your name (for audit log)"
+        required: false
+        default: "manager"
+
+jobs:
+  handle-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Approve and merge PR
+        if: github.event.inputs.action == 'approve'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          REPO: ${{ github.repository }}
+          REVIEWER: ${{ github.event.inputs.reviewer }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" \
+            -d "{\"event\": \"APPROVE\", \"body\": \"Approved manually by $REVIEWER\"}"
+
+          curl -s -X PUT \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/merge" \
+            -d "{\"merge_method\": \"squash\"}"
+
+      - name: Reject PR
+        if: github.event.inputs.action == 'reject'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          REPO: ${{ github.repository }}
+          REVIEWER: ${{ github.event.inputs.reviewer }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" \
+            -d "{\"event\": \"REQUEST_CHANGES\", \"body\": \"Rejected manually by $REVIEWER\"}"
+
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          ACTION: ${{ github.event.inputs.action }}
+          REVIEWER: ${{ github.event.inputs.reviewer }}
+        run: |
+          if [ "$ACTION" = "approve" ]; then
+            MESSAGE=":white_check_mark: PR #$PR_NUMBER đã được *duyệt và merge* bởi $REVIEWER"
+          else
+            MESSAGE=":x: PR #$PR_NUMBER đã bị *từ chối* bởi $REVIEWER"
+          fi
+
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"$MESSAGE\"}"
