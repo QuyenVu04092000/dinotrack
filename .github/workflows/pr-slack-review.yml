@@ -1,0 +1,103 @@
+name: PR Slack Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get diff stats
+        id: diff
+        run: |
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l | tr -d ' ')
+          echo "file_count=$FILES" >> $GITHUB_OUTPUT
+          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD --stat | tail -1)
+          echo "stat=$DIFF" >> $GITHUB_OUTPUT
+          # Get first 3000 chars of diff for AI summary
+          git diff origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
+
+      - name: Generate AI summary in Vietnamese
+        id: ai_summary
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          DIFF_CONTENT=$(cat /tmp/diff_snippet.txt | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          RESPONSE=$(curl -s https://api.groq.com/openai/v1/chat/completions \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"llama-3.3-70b-versatile\",
+              \"max_tokens\": 512,
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"Tóm tắt ngắn gọn những thay đổi trong PR này bằng tiếng Việt (tối đa 3 câu). Diff:\\n\" $DIFF_CONTENT
+              }]
+            }")
+          SUMMARY=$(echo "$RESPONSE" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data['choices'][0]['message']['content'])" 2>/dev/null || echo "Không thể tạo tóm tắt tự động.")
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+      - name: Post to Slack
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          FILE_COUNT="${{ steps.diff.outputs.file_count }}"
+          AI_SUMMARY="${{ steps.ai_summary.outputs.summary }}"
+
+          curl -s -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"channel\": \"$SLACK_CHANNEL_ID\",
+              \"blocks\": [
+                {
+                  \"type\": \"header\",
+                  \"text\": { \"type\": \"plain_text\", \"text\": \"Pull Request mới cần review\" }
+                },
+                {
+                  \"type\": \"section\",
+                  \"fields\": [
+                    { \"type\": \"mrkdwn\", \"text\": \"*Tiêu đề:*\\n$PR_TITLE\" },
+                    { \"type\": \"mrkdwn\", \"text\": \"*Tác giả:*\\n$PR_AUTHOR\" },
+                    { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\\n$PR_BRANCH\" },
+                    { \"type\": \"mrkdwn\", \"text\": \"*Số file thay đổi:*\\n$FILE_COUNT\" }
+                  ]
+                },
+                {
+                  \"type\": \"section\",
+                  \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Tóm tắt AI:*\\n$AI_SUMMARY\" }
+                },
+                {
+                  \"type\": \"actions\",
+                  \"elements\": [
+                    {
+                      \"type\": \"button\",
+                      \"text\": { \"type\": \"plain_text\", \"text\": \"Xem diff\" },
+                      \"url\": \"$PR_URL\",
+                      \"action_id\": \"view_diff\"
+                    }
+                  ]
+                },
+                {
+                  \"type\": \"context\",
+                  \"elements\": [
+                    { \"type\": \"mrkdwn\", \"text\": \"Dùng \`/approve $PR_NUMBER\` để duyệt hoặc \`/reject $PR_NUMBER\` để từ chối\" }
+                  ]
+                }
+              ]
+            }"
