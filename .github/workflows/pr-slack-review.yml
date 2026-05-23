@@ -3,6 +3,12 @@ name: PR Slack Review
 on:
   pull_request:
     types: [opened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to test"
+        required: true
+        default: "1"
 
 jobs:
   notify-slack:
