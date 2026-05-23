@@ -114,29 +114,6 @@ export function DonutChart({
           )}
         </div>
 
-        {/* Active ring highlight */}
-        {highlightIndex !== null && chartRef.current?.chartArea && (() => {
-          const meta = chartRef.current?.getDatasetMeta(0);
-          const arc = meta?.data[highlightIndex] as any;
-          if (!arc) return null;
-          const r = (arc.outerRadius || 0) * 2;
-          return (
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                left: `${(chartRef.current.chartArea.left + chartRef.current.chartArea.right) / 2}px`,
-                top: `${(chartRef.current.chartArea.top + chartRef.current.chartArea.bottom) / 2}px`,
-                transform: "translate(-50%, -50%)",
-                width: `${r}px`,
-                height: `${r}px`,
-                borderRadius: "50%",
-                border: `2.5px solid ${normalizedData[highlightIndex]?.color}`,
-                opacity: 0.35,
-                transition: "opacity 0.2s",
-              }}
-            />
-          );
-        })()}
       </div>
 
       {/* Connector lines */}
