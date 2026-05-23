@@ -180,8 +180,7 @@ export function DonutChart({
               left: `${label.x}px`,
               top: `${label.y}px`,
               transform: isRightSide ? "translate(0, -50%)" : "translate(-100%, -50%)",
-              opacity: isDimmed ? 0.25 : isActive ? 1 : 0.85,
-              transition: "opacity 0.2s ease",
+              opacity: 1,
             }}
           >
             {label.icon && (
