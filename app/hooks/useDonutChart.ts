@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions, ChartEvent, ActiveElement } from "chart.js";
 import { DonutChartData, LabelPosition, UseDonutChartParams, UseDonutChartResult } from "app/types/DonutChart";
+import { formatVietnameseCurrency } from "app/utilities/common/functions";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -12,13 +13,19 @@ export function useDonutChart({
   labelDistance,
   minLabelPercentage,
   initialCenterText,
+  activeIndex: externalActiveIndex,
   onSliceHover,
+  onSliceClick,
 }: UseDonutChartParams): UseDonutChartResult {
   const chartRef = useRef<ChartJS<"doughnut">>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [labelPositions, setLabelPositions] = useState<LabelPosition[]>([]);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [internalActiveIndex, setInternalActiveIndex] = useState<number | null>(null);
   const [centerText, setCenterText] = useState<string | undefined>(initialCenterText);
+  const [centerSubText, setCenterSubText] = useState<string | undefined>(undefined);
+
+  const activeIndex = externalActiveIndex !== undefined ? externalActiveIndex : internalActiveIndex;
 
   const { total, normalizedData } = useMemo(() => {
     const sum = data.reduce((acc, item) => acc + item.value, 0);
@@ -29,21 +36,41 @@ export function useDonutChart({
     return { total: sum, normalizedData: normalized };
   }, [data]);
 
+  // Update center text based on active/hovered slice
+  useEffect(() => {
+    if (activeIndex !== null && normalizedData[activeIndex]) {
+      const item = normalizedData[activeIndex];
+      setCenterText(item.label);
+      setCenterSubText(formatVietnameseCurrency(item.value));
+    } else if (hoveredIndex !== null && normalizedData[hoveredIndex]) {
+      const item = normalizedData[hoveredIndex];
+      setCenterText(item.label);
+      setCenterSubText(formatVietnameseCurrency(item.value));
+    } else {
+      setCenterText(initialCenterText ?? formatVietnameseCurrency(total));
+      setCenterSubText(undefined);
+    }
+  }, [activeIndex, hoveredIndex, normalizedData, total, initialCenterText]);
+
   const chartData = useMemo(
     () => ({
       labels: normalizedData.map((item) => item.label),
       datasets: [
         {
           data: normalizedData.map((item) => item.percentage),
-          backgroundColor: normalizedData.map((item) => item.color),
+          backgroundColor: normalizedData.map((item, i) => {
+            if (activeIndex !== null && i !== activeIndex) return item.color + "60";
+            return item.color;
+          }),
           borderColor: "#ffffff",
           borderWidth: 2,
+          hoverOffset: 10,
           spacing: 2,
           cutout: `${innerRadiusRatio * 100}%`,
         },
       ],
     }),
-    [normalizedData, innerRadiusRatio],
+    [normalizedData, innerRadiusRatio, activeIndex],
   );
 
   useEffect(() => {
@@ -74,11 +101,9 @@ export function useDonutChart({
         const outerRadius = firstArc.outerRadius;
 
         const borderWidth = chartData.datasets[0].borderWidth || 2;
-
         const innerRadius = outerRadius * innerRadiusRatio;
         const visualOuterRadius = outerRadius - borderWidth / 2;
         const visualInnerRadius = innerRadius + borderWidth / 2;
-        const visualSliceRadius = (visualInnerRadius + visualOuterRadius) / 2;
 
         const allPositions: LabelPosition[] = [];
 
@@ -104,10 +129,7 @@ export function useDonutChart({
           const labelX = isRightSide ? point2X + horizontalExtension : point2X - horizontalExtension;
           const labelY = point2Y;
 
-          const point3X = labelX;
-          const point3Y = labelY;
-
-          const polylinePoints = `${point1X},${point1Y} ${point2X},${point2Y} ${point3X},${point3Y}`;
+          const polylinePoints = `${point1X},${point1Y} ${point2X},${point2Y} ${labelX},${labelY}`;
 
           allPositions.push({
             id: item.id,
@@ -127,7 +149,7 @@ export function useDonutChart({
         const filteredPositions = allPositions.filter((pos) => pos.percentage >= minLabelPercentage);
 
         const adjustedPositions: LabelPosition[] = [];
-        const minDistance = 50;
+        const minDistance = 52;
 
         filteredPositions.forEach((pos) => {
           let adjustedPos = { ...pos };
@@ -139,24 +161,16 @@ export function useDonutChart({
 
             for (const placed of adjustedPositions) {
               if (placed.side !== adjustedPos.side) continue;
-
-              const dx = adjustedPos.x - placed.x;
               const dy = adjustedPos.y - placed.y;
+              const dx = adjustedPos.x - placed.x;
               const distance = Math.sqrt(dx * dx + dy * dy);
 
               if (distance < minDistance) {
                 hasOverlap = true;
                 const pushDistance = minDistance - distance + 5;
-                if (adjustedPos.y < placed.y) {
-                  adjustedPos.y -= pushDistance;
-                } else {
-                  adjustedPos.y += pushDistance;
-                }
-
+                adjustedPos.y += adjustedPos.y < placed.y ? -pushDistance : pushDistance;
                 const polylineParts = adjustedPos.polylinePoints.split(" ");
-                const point3X = adjustedPos.x;
-                const point3Y = adjustedPos.y;
-                adjustedPos.polylinePoints = `${polylineParts[0]} ${polylineParts[1]} ${point3X},${point3Y}`;
+                adjustedPos.polylinePoints = `${polylineParts[0]} ${polylineParts[1]} ${adjustedPos.x},${adjustedPos.y}`;
                 break;
               }
             }
@@ -174,63 +188,65 @@ export function useDonutChart({
       }
     };
 
-    const timeout = setTimeout(calculatePositions, 100);
-
-    const handleResize = () => {
-      calculatePositions();
-    };
-
-    window.addEventListener("resize", handleResize);
+    const timeout = setTimeout(calculatePositions, 150);
+    window.addEventListener("resize", calculatePositions);
     return () => {
       clearTimeout(timeout);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", calculatePositions);
     };
   }, [chartData, normalizedData, labelDistance, minLabelPercentage, innerRadiusRatio]);
 
   const handleChartHover = useCallback(
     (event: ChartEvent, elements: ActiveElement[]) => {
-      const chart = chartRef.current;
-      if (!chart) return;
-
       if (elements.length > 0) {
         const index = elements[0].index;
         setHoveredIndex(index);
-        const hoveredData = normalizedData[index];
-        setCenterText(`${hoveredData.value.toLocaleString()}đ`);
-        onSliceHover?.(hoveredData);
+        onSliceHover?.(normalizedData[index]);
       } else {
         setHoveredIndex(null);
-        setCenterText(initialCenterText);
         onSliceHover?.(null);
       }
     },
-    [normalizedData, initialCenterText, onSliceHover],
+    [normalizedData, onSliceHover],
+  );
+
+  const handleChartClick = useCallback(
+    (event: ChartEvent, elements: ActiveElement[]) => {
+      if (elements.length > 0) {
+        const index = elements[0].index;
+        const newActive = internalActiveIndex === index ? null : index;
+        setInternalActiveIndex(newActive);
+        onSliceClick?.(newActive !== null ? normalizedData[newActive] : null, newActive);
+      } else {
+        setInternalActiveIndex(null);
+        onSliceClick?.(null, null);
+      }
+    },
+    [normalizedData, internalActiveIndex, onSliceClick],
   );
 
   const options: ChartOptions<"doughnut"> = useMemo(
     () => ({
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: true,
       animation: {
-        duration: 0,
+        duration: 500,
+        easing: "easeInOutQuart",
       },
       plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          enabled: false,
-        },
+        legend: { display: false },
+        tooltip: { enabled: false },
       },
       rotation: -90,
       circumference: 360,
       onHover: handleChartHover,
+      onClick: handleChartClick,
       interaction: {
-        intersect: false,
-        mode: "index",
+        intersect: true,
+        mode: "nearest",
       },
     }),
-    [handleChartHover],
+    [handleChartHover, handleChartClick],
   );
 
   return {
@@ -240,7 +256,10 @@ export function useDonutChart({
     options,
     labelPositions,
     hoveredIndex,
+    activeIndex,
     centerText,
+    centerSubText,
     normalizedData,
+    total,
   };
 }

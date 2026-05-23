@@ -29,7 +29,9 @@ export interface UseDonutChartParams {
   labelDistance: number;
   minLabelPercentage: number;
   initialCenterText?: string;
+  activeIndex?: number | null;
   onSliceHover?: (data: DonutChartData | null) => void;
+  onSliceClick?: (data: DonutChartData | null, index: number | null) => void;
 }
 
 export interface UseDonutChartResult {
@@ -42,6 +44,7 @@ export interface UseDonutChartResult {
       backgroundColor: string[];
       borderColor: string;
       borderWidth: number;
+      hoverOffset: number;
       spacing: number;
       cutout: string;
     }[];
@@ -49,6 +52,9 @@ export interface UseDonutChartResult {
   options: ChartOptions<"doughnut">;
   labelPositions: LabelPosition[];
   hoveredIndex: number | null;
+  activeIndex: number | null;
   centerText?: string;
+  centerSubText?: string;
   normalizedData: (DonutChartData & { percentage: number })[];
+  total: number;
 }
