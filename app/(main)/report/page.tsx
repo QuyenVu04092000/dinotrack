@@ -85,25 +85,18 @@ export default function ReportPage() {
         .filter((item) => item.value > 0),
     [chartData, categoryView, subCategoriesWithPercentages, categories, reportType],
   );
+  const handleSliceClick = useCallback((_data: DonutChartData | null, index: number | null) => {
+    setActiveSliceIndex(index);
+    // Scroll category list to the active item
+    if (index !== null && categoryListRef.current) {
+      const rows = categoryListRef.current.querySelectorAll("[data-category-row]");
+      rows[index]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, []);
 
-  const handleSliceClick = useCallback(
-    (_data: DonutChartData | null, index: number | null) => {
-      setActiveSliceIndex(index);
-      // Scroll category list to the active item
-      if (index !== null && categoryListRef.current) {
-        const rows = categoryListRef.current.querySelectorAll("[data-category-row]");
-        rows[index]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    },
-    [],
-  );
-
-  const handleCategoryRowClick = useCallback(
-    (index: number) => {
-      setActiveSliceIndex((prev) => (prev === index ? null : index));
-    },
-    [],
-  );
+  const handleCategoryRowClick = useCallback((index: number) => {
+    setActiveSliceIndex((prev) => (prev === index ? null : index));
+  }, []);
 
   return (
     <section
@@ -242,8 +235,7 @@ export default function ReportPage() {
             <div className="relative overflow-hidden rounded-xl bg-white px-3 py-2">
               <div className="absolute inset-0 opacity-40 bg-gradient-to-r from-[#BBEFE7] to-[#F6FFDF]"></div>
               <p className="relative text-sm font-medium text-[#3B4D69]">
-                {reportType === "expense" ? "Chi tiêu" : "Thu nhập"}{" "}
-                {period === "week" ? "tuần này" : "tháng này"}{" "}
+                {reportType === "expense" ? "Chi tiêu" : "Thu nhập"} {period === "week" ? "tuần này" : "tháng này"}{" "}
                 {formattedPeriodRange && `(${formattedPeriodRange})`}
               </p>
               <div className="relative mt-1 flex flex-col gap-1">
@@ -263,7 +255,10 @@ export default function ReportPage() {
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M9.77295 7.14797L6.39795 10.523C6.34569 10.5754 6.28359 10.617 6.21522 10.6454C6.14685 10.6738 6.07354 10.6884 5.99951 10.6884C5.92548 10.6884 5.85217 10.6738 5.7838 10.6454C5.71543 10.617 5.65333 10.5754 5.60107 10.523L2.22607 7.14797C2.1204 7.0423 2.06104 6.89897 2.06104 6.74953C2.06104 6.60009 2.1204 6.45677 2.22607 6.35109C2.33175 6.24542 2.47507 6.18606 2.62451 6.18606C2.77395 6.18606 2.91728 6.24542 3.02295 6.35109L5.43748 8.76562V1.875C5.43748 1.72582 5.49674 1.58274 5.60223 1.47725C5.70772 1.37176 5.8508 1.3125 5.99998 1.3125C6.14916 1.3125 6.29224 1.37176 6.39773 1.47725C6.50322 1.58274 6.56248 1.72582 6.56248 1.875V8.76562L8.97701 6.35063C9.08268 6.24495 9.226 6.18559 9.37545 6.18559C9.52489 6.18559 9.66821 6.24495 9.77388 6.35063C9.87956 6.4563 9.93892 6.59962 9.93892 6.74906C9.93892 6.89851 9.87956 7.04183 9.77388 7.1475L9.77295 7.14797Z" fill="white" />
+                          <path
+                            d="M9.77295 7.14797L6.39795 10.523C6.34569 10.5754 6.28359 10.617 6.21522 10.6454C6.14685 10.6738 6.07354 10.6884 5.99951 10.6884C5.92548 10.6884 5.85217 10.6738 5.7838 10.6454C5.71543 10.617 5.65333 10.5754 5.60107 10.523L2.22607 7.14797C2.1204 7.0423 2.06104 6.89897 2.06104 6.74953C2.06104 6.60009 2.1204 6.45677 2.22607 6.35109C2.33175 6.24542 2.47507 6.18606 2.62451 6.18606C2.77395 6.18606 2.91728 6.24542 3.02295 6.35109L5.43748 8.76562V1.875C5.43748 1.72582 5.49674 1.58274 5.60223 1.47725C5.70772 1.37176 5.8508 1.3125 5.99998 1.3125C6.14916 1.3125 6.29224 1.37176 6.39773 1.47725C6.50322 1.58274 6.56248 1.72582 6.56248 1.875V8.76562L8.97701 6.35063C9.08268 6.24495 9.226 6.18559 9.37545 6.18559C9.52489 6.18559 9.66821 6.24495 9.77388 6.35063C9.87956 6.4563 9.93892 6.59962 9.93892 6.74906C9.93892 6.89851 9.87956 7.04183 9.77388 7.1475L9.77295 7.14797Z"
+                            fill="white"
+                          />
                         </svg>
                       )}
                     </div>
@@ -277,7 +272,9 @@ export default function ReportPage() {
                       {formatVietnameseCurrency(reportData?.previousPeriod?.expenseChange ?? 0)} (
                       {reportData?.previousPeriod?.expenseChangePercent}%)
                     </p>
-                    <p className="text-sm font-medium text-[#3B4D69]">so vs {period === "week" ? "tuần" : "tháng"} trước</p>
+                    <p className="text-sm font-medium text-[#3B4D69]">
+                      so vs {period === "week" ? "tuần" : "tháng"} trước
+                    </p>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1">
@@ -294,7 +291,10 @@ export default function ReportPage() {
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M9.77295 7.14797L6.39795 10.523C6.34569 10.5754 6.28359 10.617 6.21522 10.6454C6.14685 10.6738 6.07354 10.6884 5.99951 10.6884C5.92548 10.6884 5.85217 10.6738 5.7838 10.6454C5.71543 10.617 5.65333 10.5754 5.60107 10.523L2.22607 7.14797C2.1204 7.0423 2.06104 6.89897 2.06104 6.74953C2.06104 6.60009 2.1204 6.45677 2.22607 6.35109C2.33175 6.24542 2.47507 6.18606 2.62451 6.18606C2.77395 6.18606 2.91728 6.24542 3.02295 6.35109L5.43748 8.76562V1.875C5.43748 1.72582 5.49674 1.58274 5.60223 1.47725C5.70772 1.37176 5.8508 1.3125 5.99998 1.3125C6.14916 1.3125 6.29224 1.37176 6.39773 1.47725C6.50322 1.58274 6.56248 1.72582 6.56248 1.875V8.76562L8.97701 6.35063C9.08268 6.24495 9.226 6.18559 9.37545 6.18559C9.52489 6.18559 9.66821 6.24495 9.77388 6.35063C9.87956 6.4563 9.93892 6.59962 9.93892 6.74906C9.93892 6.89851 9.87956 7.04183 9.77388 7.1475L9.77295 7.14797Z" fill="white" />
+                          <path
+                            d="M9.77295 7.14797L6.39795 10.523C6.34569 10.5754 6.28359 10.617 6.21522 10.6454C6.14685 10.6738 6.07354 10.6884 5.99951 10.6884C5.92548 10.6884 5.85217 10.6738 5.7838 10.6454C5.71543 10.617 5.65333 10.5754 5.60107 10.523L2.22607 7.14797C2.1204 7.0423 2.06104 6.89897 2.06104 6.74953C2.06104 6.60009 2.1204 6.45677 2.22607 6.35109C2.33175 6.24542 2.47507 6.18606 2.62451 6.18606C2.77395 6.18606 2.91728 6.24542 3.02295 6.35109L5.43748 8.76562V1.875C5.43748 1.72582 5.49674 1.58274 5.60223 1.47725C5.70772 1.37176 5.8508 1.3125 5.99998 1.3125C6.14916 1.3125 6.29224 1.37176 6.39773 1.47725C6.50322 1.58274 6.56248 1.72582 6.56248 1.875V8.76562L8.97701 6.35063C9.08268 6.24495 9.226 6.18559 9.37545 6.18559C9.52489 6.18559 9.66821 6.24495 9.77388 6.35063C9.87956 6.4563 9.93892 6.59962 9.93892 6.74906C9.93892 6.89851 9.87956 7.04183 9.77388 7.1475L9.77295 7.14797Z"
+                            fill="white"
+                          />
                         </svg>
                       )}
                     </div>
@@ -308,7 +308,9 @@ export default function ReportPage() {
                       {formatVietnameseCurrency(reportData?.previousPeriod?.incomeChange ?? 0)} (
                       {reportData?.previousPeriod?.incomeChangePercent}%)
                     </p>
-                    <p className="text-sm font-medium text-[#3B4D69]">so với {period === "week" ? "tuần" : "tháng"} trước</p>
+                    <p className="text-sm font-medium text-[#3B4D69]">
+                      so với {period === "week" ? "tuần" : "tháng"} trước
+                    </p>
                   </div>
                 )}
               </div>
@@ -349,7 +351,10 @@ export default function ReportPage() {
 
           {/* Chart — responsive, no fixed size */}
           <div className="mb-4 relative w-full">
-            <div className="relative flex items-center justify-center py-3" style={{ overflow: "visible", padding: "12px 64px" }}>
+            <div
+              className="relative flex items-center justify-center py-3"
+              style={{ overflow: "visible", padding: "12px 64px" }}
+            >
               {isLoading || todaySpentLoading ? (
                 <div className="flex flex-col items-center gap-2 py-8">
                   <div className="w-32 h-32 rounded-full border-4 border-[#E0F5FE] border-t-[#0046B0] animate-spin" />
@@ -378,7 +383,7 @@ export default function ReportPage() {
                     data={resolvedChartData}
                     innerRadiusRatio={0.6}
                     labelDistance={22}
-                    minLabelPercentage={8}
+                    minLabelPercentage={0}
                     activeIndex={activeSliceIndex}
                     onSliceClick={handleSliceClick}
                   />
@@ -444,10 +449,25 @@ export default function ReportPage() {
                         <div className="flex h-4 w-4 shrink-0 items-center justify-center text-base">
                           {subCategory.icon || "📂"}
                         </div>
-                        <p className="flex-1 text-sm font-medium text-[#3B4D69] truncate">{subCategory.subCategoryName}</p>
+                        <p className="flex-1 text-sm font-medium text-[#3B4D69] truncate">
+                          {subCategory.subCategoryName}
+                        </p>
                         <p className="text-sm font-semibold text-[#1F2532] shrink-0">{formattedAmount}</p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                          <path d="M6 4L10 8L6 12" stroke="#3B4D69" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          className="shrink-0"
+                        >
+                          <path
+                            d="M6 4L10 8L6 12"
+                            stroke="#3B4D69"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
 
@@ -497,8 +517,21 @@ export default function ReportPage() {
                         </div>
                         <p className="flex-1 text-sm font-medium text-[#3B4D69] truncate">{category.categoryName}</p>
                         <p className="text-sm font-semibold text-[#1F2532] shrink-0">{formattedAmount}</p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                          <path d="M6 4L10 8L6 12" stroke="#3B4D69" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          className="shrink-0"
+                        >
+                          <path
+                            d="M6 4L10 8L6 12"
+                            stroke="#3B4D69"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
 
