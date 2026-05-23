@@ -11,7 +11,9 @@
       "Bash(gh pr *)",
       "Bash(mkdir -p /Users/quyenvu/Desktop/personal/dino/slack-worker)",
       "Read(//Users/quyenvu/Desktop/personal/dino/**)",
-      "Bash(npx wrangler *)"
+      "Bash(npx wrangler *)",
+      "Bash(gh run *)",
+      "Bash(gh api *)"
     ],
     "additionalDirectories": [
       "/Users/quyenvu/Desktop/personal/dino/slack-worker/src",
