@@ -146,31 +146,32 @@ export function useDonutChart({
           });
         });
 
-        const filteredPositions = allPositions.filter((pos) => pos.percentage >= minLabelPercentage);
+        // Filter and sort by Y so labels are processed top-to-bottom for stable pushdown
+        const filteredPositions = allPositions
+          .filter((pos) => pos.percentage >= minLabelPercentage)
+          .sort((a, b) => a.y - b.y);
 
         const adjustedPositions: LabelPosition[] = [];
-        const minDistance = 52;
+        const labelRowHeight = 22;
 
         filteredPositions.forEach((pos) => {
           let adjustedPos = { ...pos };
           let attempts = 0;
-          const maxAttempts = 10;
+          const maxAttempts = 30;
 
           while (attempts < maxAttempts) {
             let hasOverlap = false;
 
             for (const placed of adjustedPositions) {
               if (placed.side !== adjustedPos.side) continue;
-              const dy = adjustedPos.y - placed.y;
-              const dx = adjustedPos.x - placed.x;
-              const distance = Math.sqrt(dx * dx + dy * dy);
+              const dy = Math.abs(adjustedPos.y - placed.y);
 
-              if (distance < minDistance) {
+              if (dy < labelRowHeight) {
                 hasOverlap = true;
-                const pushDistance = minDistance - distance + 5;
-                adjustedPos.y += adjustedPos.y < placed.y ? -pushDistance : pushDistance;
-                const polylineParts = adjustedPos.polylinePoints.split(" ");
-                adjustedPos.polylinePoints = `${polylineParts[0]} ${polylineParts[1]} ${adjustedPos.x},${adjustedPos.y}`;
+                const push = labelRowHeight - dy + 2;
+                adjustedPos.y += adjustedPos.y <= placed.y ? -push : push;
+                const parts = adjustedPos.polylinePoints.split(" ");
+                adjustedPos.polylinePoints = `${parts[0]} ${parts[1]} ${adjustedPos.x},${adjustedPos.y}`;
                 break;
               }
             }
@@ -188,7 +189,8 @@ export function useDonutChart({
       }
     };
 
-    const timeout = setTimeout(calculatePositions, 150);
+    // Wait for animation (500ms) to finish before calculating label positions
+    const timeout = setTimeout(calculatePositions, 600);
     window.addEventListener("resize", calculatePositions);
     return () => {
       clearTimeout(timeout);

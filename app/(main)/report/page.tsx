@@ -378,7 +378,7 @@ export default function ReportPage() {
                     data={resolvedChartData}
                     innerRadiusRatio={0.6}
                     labelDistance={22}
-                    minLabelPercentage={0}
+                    minLabelPercentage={8}
                     activeIndex={activeSliceIndex}
                     onSliceClick={handleSliceClick}
                   />
