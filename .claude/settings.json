@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(npm ci *)",
+      "Bash(cat /Users/quyenvu/.npm/_logs/2026-05-22T10_12_12_103Z-debug-0.log | grep -A 10 \"Invalid Version\" | head -20)",
+      "Read(//Users/quyenvu/.npm/_logs/**)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.devDependencies, null, 2\\)\\)\")"
+    ]
+  }
+}
