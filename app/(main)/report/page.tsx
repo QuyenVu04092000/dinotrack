@@ -349,7 +349,7 @@ export default function ReportPage() {
 
           {/* Chart — responsive, no fixed size */}
           <div className="mb-4 relative w-full">
-            <div className="relative flex items-center justify-center px-6 py-3" style={{ overflow: "visible" }}>
+            <div className="relative flex items-center justify-center py-3" style={{ overflow: "visible", padding: "12px 64px" }}>
               {isLoading || todaySpentLoading ? (
                 <div className="flex flex-col items-center gap-2 py-8">
                   <div className="w-32 h-32 rounded-full border-4 border-[#E0F5FE] border-t-[#0046B0] animate-spin" />
@@ -377,7 +377,7 @@ export default function ReportPage() {
                   <DonutChart
                     data={resolvedChartData}
                     innerRadiusRatio={0.6}
-                    labelDistance={32}
+                    labelDistance={22}
                     minLabelPercentage={0}
                     activeIndex={activeSliceIndex}
                     onSliceClick={handleSliceClick}
