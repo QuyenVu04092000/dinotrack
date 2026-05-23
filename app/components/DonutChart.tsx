@@ -183,11 +183,9 @@ export function DonutChart({
               opacity: 1,
             }}
           >
-            {label.icon && (
-              <span style={{ fontSize: "14px", lineHeight: 1 }}>
-                {label.icon}
-              </span>
-            )}
+            <span style={{ fontSize: "14px", lineHeight: 1 }}>
+              {label.icon || "📂"}
+            </span>
             <span
               style={{
                 fontSize: isActive ? "13px" : "12px",
