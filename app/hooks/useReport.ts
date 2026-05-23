@@ -49,7 +49,13 @@ export const useReport = (): UseReportResult => {
         type: reportType === "expense" ? "out" : "in",
       };
 
-      const response = await transactionApi.getReport(params);
+      // Fetch report + sub-category icons in parallel, set state only when both done
+      const [response, subs] = await Promise.all([
+        transactionApi.getReport(params),
+        categoryApi.getSubCategories(),
+      ]);
+
+      setSubCategoriesWithIcons(subs);
       setReportData(response.data);
     } catch (err) {
       const message = extractErrorMessage(err);
@@ -79,20 +85,6 @@ export const useReport = (): UseReportResult => {
     };
 
     fetchTodaySpent();
-  }, []);
-
-  // Fetch sub-categories to get icons
-  useEffect(() => {
-    const fetchSubCategories = async () => {
-      try {
-        const subs = await categoryApi.getSubCategories();
-        setSubCategoriesWithIcons(subs);
-      } catch (error) {
-        console.error("Failed to fetch sub-categories:", error);
-      }
-    };
-
-    fetchSubCategories();
   }, []);
 
   const totalAmount = useMemo(() => {
