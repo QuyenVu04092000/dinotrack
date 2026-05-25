@@ -33,6 +33,15 @@ jobs:
         run: |
           PR_NUMBER="${{ github.event.pull_request.number || inputs.pr_number }}"
           REPO="${{ github.repository }}"
+
+          # Skip if PR already merged or closed
+          PR_STATE=$(gh api repos/$REPO/pulls/$PR_NUMBER --jq '.state')
+          if [ "$PR_STATE" != "open" ]; then
+            echo "PR #$PR_NUMBER is $PR_STATE — skipping notify"
+            echo "copilot_state=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           echo "Waiting for Copilot to review PR #$PR_NUMBER..."
 
           COPILOT_STATE=""
@@ -56,6 +65,7 @@ jobs:
           fi
 
       - name: Get diff stats
+        if: steps.copilot.outputs.copilot_state != 'skip'
         id: diff
         run: |
           BASE=${{ github.event.pull_request.base.ref || 'main' }}
@@ -64,6 +74,7 @@ jobs:
           git diff origin/${BASE}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
 
       - name: Generate AI summary in Vietnamese
+        if: steps.copilot.outputs.copilot_state != 'skip'
         id: ai_summary
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -102,6 +113,7 @@ jobs:
           PYEOF
 
       - name: Post to Slack
+        if: steps.copilot.outputs.copilot_state != 'skip'
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
