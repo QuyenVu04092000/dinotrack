@@ -19,6 +19,7 @@ jobs:
     permissions:
       pull-requests: read
       contents: read
+      models: read
 
     steps:
       - uses: actions/checkout@v4
@@ -47,14 +48,14 @@ jobs:
         if: steps.check.outputs.pr_state == 'open'
         id: ai_summary
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PYEOF'
           import os, sys, json, urllib.request
 
           diff = open("/tmp/diff_snippet.txt").read() or "(no diff)"
           payload = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "gpt-4o-mini",
             "max_tokens": 512,
             "messages": [{
               "role": "user",
@@ -62,10 +63,10 @@ jobs:
             }]
           }
           req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
+            "https://models.inference.ai.azure.com/chat/completions",
             data=json.dumps(payload).encode(),
             headers={
-              "Authorization": f"Bearer {os.environ['GROQ_API_KEY']}",
+              "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
               "Content-Type": "application/json"
             }
           )
@@ -74,7 +75,7 @@ jobs:
               data = json.load(resp)
               summary = data["choices"][0]["message"]["content"].strip()
           except Exception as e:
-            print(f"Groq error: {e}", file=sys.stderr)
+            print(f"GitHub Models error: {e}", file=sys.stderr)
             summary = "Không thể tạo tóm tắt tự động."
 
           delimiter = "EOF_SUMMARY"
