@@ -25,17 +25,42 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check PR is still open
-        id: check
+      - name: Wait for Copilot review
+        id: copilot
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           PR_NUMBER="${{ github.event.pull_request.number || inputs.pr_number }}"
-          PR_STATE=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.state')
-          echo "pr_state=$PR_STATE" >> $GITHUB_OUTPUT
+          REPO="${{ github.repository }}"
+
+          PR_STATE=$(gh api repos/$REPO/pulls/$PR_NUMBER --jq '.state')
+          if [ "$PR_STATE" != "open" ]; then
+            echo "state=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Polling for Copilot review (max 3 min)..."
+          STATE=""
+          for i in $(seq 1 12); do
+            REVIEW=$(gh api repos/$REPO/pulls/$PR_NUMBER/reviews \
+              --jq '[.[] | select(.user.login == "copilot-pull-request-reviewer")] | last')
+            STATE=$(echo "$REVIEW" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          print(d.get('state', '') if d else '')
+            " 2>/dev/null || echo "")
+            if [ -n "$STATE" ]; then
+              echo "Copilot reviewed: $STATE"
+              break
+            fi
+            echo "Attempt $i/12 — waiting 15s..."
+            sleep 15
+          done
+
+          echo "state=${STATE:-skip}" >> $GITHUB_OUTPUT
 
       - name: Get diff stats
-        if: steps.check.outputs.pr_state == 'open'
+        if: steps.copilot.outputs.state != 'skip'
         id: diff
         run: |
           BASE=${{ github.event.pull_request.base.ref || 'main' }}
@@ -44,7 +69,7 @@ jobs:
           git diff origin/${BASE}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
 
       - name: Generate AI summary in Vietnamese
-        if: steps.check.outputs.pr_state == 'open'
+        if: steps.copilot.outputs.state != 'skip'
         id: ai_summary
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -83,7 +108,7 @@ jobs:
           PYEOF
 
       - name: Post to Slack
-        if: steps.check.outputs.pr_state == 'open'
+        if: steps.copilot.outputs.state != 'skip'
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
@@ -96,13 +121,20 @@ jobs:
           pr_author  = "${{ github.event.pull_request.user.login }}"
           pr_branch  = "${{ github.event.pull_request.head.ref }}"
           pr_url     = "${{ github.event.pull_request.html_url }}"
-          file_count = "${{ steps.diff.outputs.file_count }}"
-          ai_summary = "${{ steps.ai_summary.outputs.summary }}"
+          file_count    = "${{ steps.diff.outputs.file_count }}"
+          ai_summary    = "${{ steps.ai_summary.outputs.summary }}"
+          copilot_state = "${{ steps.copilot.outputs.state }}"
+
+          state_label = {
+            "APPROVED": "✅ Copilot approved",
+            "CHANGES_REQUESTED": "🔄 Copilot yêu cầu chỉnh sửa",
+            "COMMENTED": "💬 Copilot đã review và comment",
+          }.get(copilot_state.upper(), f"💬 {copilot_state}")
 
           blocks = [
             {
               "type": "header",
-              "text": {"type": "plain_text", "text": "🔔 Pull Request mới — đang chờ Copilot review"}
+              "text": {"type": "plain_text", "text": "Pull Request da duoc Copilot review — can quyet dinh merge"}
             },
             {
               "type": "section",
@@ -111,6 +143,7 @@ jobs:
                 {"type": "mrkdwn", "text": f"*Tác giả:*\n{pr_author}"},
                 {"type": "mrkdwn", "text": f"*Branch:*\n{pr_branch}"},
                 {"type": "mrkdwn", "text": f"*Số file thay đổi:*\n{file_count}"},
+                {"type": "mrkdwn", "text": f"*Copilot review:*\n{state_label}"},
               ]
             },
             {
@@ -131,7 +164,7 @@ jobs:
             {
               "type": "context",
               "elements": [
-                {"type": "mrkdwn", "text": f"⏳ Copilot đang review PR #{pr_number}... Sẽ thông báo khi xong."}
+                {"type": "mrkdwn", "text": f"Dùng `/approve {pr_number}` để merge hoặc `/reject {pr_number}` để từ chối"}
               ]
             }
           ]
