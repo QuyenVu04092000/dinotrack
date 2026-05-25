@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.pull_request.draft == false
+      (github.event.pull_request.draft == false &&
+       github.event.pull_request.state == 'open')
     permissions:
       pull-requests: read
       contents: read
