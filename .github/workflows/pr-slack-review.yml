@@ -19,6 +19,7 @@ jobs:
     permissions:
       pull-requests: read
       contents: read
+      models: read
 
     steps:
       - uses: actions/checkout@v4
@@ -47,14 +48,14 @@ jobs:
         if: steps.check.outputs.pr_state == 'open'
         id: ai_summary
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PYEOF'
           import os, sys, json, urllib.request
 
           diff = open("/tmp/diff_snippet.txt").read() or "(no diff)"
           payload = {
-            "model": "claude-haiku-4-5-20251001",
+            "model": "gpt-4o-mini",
             "max_tokens": 512,
             "messages": [{
               "role": "user",
@@ -62,20 +63,19 @@ jobs:
             }]
           }
           req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
+            "https://models.inference.ai.azure.com/chat/completions",
             data=json.dumps(payload).encode(),
             headers={
-              "x-api-key": os.environ["ANTHROPIC_API_KEY"],
-              "anthropic-version": "2023-06-01",
+              "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
               "Content-Type": "application/json"
             }
           )
           try:
             with urllib.request.urlopen(req, timeout=30) as resp:
               data = json.load(resp)
-              summary = data["content"][0]["text"].strip()
+              summary = data["choices"][0]["message"]["content"].strip()
           except Exception as e:
-            print(f"Anthropic error: {e}", file=sys.stderr)
+            print(f"GitHub Models error: {e}", file=sys.stderr)
             summary = "Không thể tạo tóm tắt tự động."
 
           delimiter = "EOF_SUMMARY"
