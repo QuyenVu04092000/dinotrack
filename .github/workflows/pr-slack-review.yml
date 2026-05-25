@@ -65,11 +65,13 @@ jobs:
               data = json.load(resp)
               summary = data["choices"][0]["message"]["content"].strip()
           except Exception as e:
+            print(f"Groq error: {e}", file=sys.stderr)
             summary = "Không thể tạo tóm tắt tự động."
 
+          # Use GitHub multiline output format to handle newlines safely
+          delimiter = "EOF_SUMMARY"
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            # Write as single line to avoid multiline issues
-            f.write(f"summary={summary.replace(chr(10), ' ')}\n")
+            f.write(f"summary<<{delimiter}\n{summary}\n{delimiter}\n")
           PYEOF
 
       - name: Post to Slack
