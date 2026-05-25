@@ -7,6 +7,7 @@ import type { DonutChartData } from "app/types/DonutChart";
 
 interface DonutChartProps {
   data: DonutChartData[];
+  className?: string;
   innerRadiusRatio?: number;
   labelDistance?: number;
   minLabelPercentage?: number;
@@ -18,6 +19,7 @@ interface DonutChartProps {
 
 export function DonutChart({
   data,
+  className,
   innerRadiusRatio = 0.55,
   labelDistance = 38,
   minLabelPercentage = 5,
@@ -43,7 +45,7 @@ export function DonutChart({
   return (
     <div
       ref={containerRef}
-      className="relative w-full"
+      className={`relative w-full${className ? ` ${className}` : ""}`}
       style={{ overflow: "visible" }}
     >
       {/* Chart */}
