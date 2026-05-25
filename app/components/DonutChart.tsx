@@ -44,7 +44,7 @@ export function DonutChart({
 
   const highlightIndex = activeIndex !== null ? activeIndex : hoveredIndex;
 
-  if (!data || data.length === 0) {
+  if (!data || data.length === 0 || data.every((d) => d.value === 0)) {
     return (
       <div className="flex items-center justify-center w-full h-40 text-sm text-gray-400">
         {emptyText}
