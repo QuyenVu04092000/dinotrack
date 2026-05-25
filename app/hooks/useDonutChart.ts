@@ -31,7 +31,7 @@ export function useDonutChart({
     const sum = data.reduce((acc, item) => acc + item.value, 0);
     const normalized = data.map((item) => ({
       ...item,
-      percentage: sum > 0 ? (item.value / sum) * 100 : 0,
+      percentage: sum > 0 ? Math.max(0, (item.value / sum) * 100) : 0,
     }));
     return { total: sum, normalizedData: normalized };
   }, [data]);
