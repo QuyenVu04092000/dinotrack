@@ -88,6 +88,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          AI_SUMMARY: ${{ steps.ai_summary.outputs.summary }}
         run: |
           python3 - <<'PYEOF'
           import os, json, urllib.request
@@ -98,7 +99,7 @@ jobs:
           pr_branch   = "${{ github.event.pull_request.head.ref }}"
           pr_url      = "${{ github.event.pull_request.html_url }}"
           file_count  = "${{ steps.diff.outputs.file_count }}"
-          ai_summary  = "${{ steps.ai_summary.outputs.summary }}"
+          ai_summary  = os.environ.get("AI_SUMMARY", "Không thể tạo tóm tắt tự động.")
           commit_sha  = "${{ github.event.pull_request.head.sha }}"[:7]
           commit_msg  = "${{ github.event.head_commit.message || github.event.pull_request.head.sha }}"
           commit_url  = "${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}"
