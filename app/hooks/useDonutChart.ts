@@ -7,6 +7,9 @@ import { formatVietnameseCurrency } from "app/utilities/common/functions";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+const LABEL_ROW_HEIGHT = 22;
+const MAX_OVERLAP_ATTEMPTS = 30;
+
 export function useDonutChart({
   data,
   innerRadiusRatio,
@@ -152,23 +155,21 @@ export function useDonutChart({
           .sort((a, b) => a.y - b.y);
 
         const adjustedPositions: LabelPosition[] = [];
-        const labelRowHeight = 22;
 
         filteredPositions.forEach((pos) => {
           let adjustedPos = { ...pos };
           let attempts = 0;
-          const maxAttempts = 30;
 
-          while (attempts < maxAttempts) {
+          while (attempts < MAX_OVERLAP_ATTEMPTS) {
             let hasOverlap = false;
 
             for (const placed of adjustedPositions) {
               if (placed.side !== adjustedPos.side) continue;
               const dy = Math.abs(adjustedPos.y - placed.y);
 
-              if (dy < labelRowHeight) {
+              if (dy < LABEL_ROW_HEIGHT) {
                 hasOverlap = true;
-                const push = labelRowHeight - dy + 2;
+                const push = LABEL_ROW_HEIGHT - dy + 2;
                 adjustedPos.y += adjustedPos.y <= placed.y ? -push : push;
                 const parts = adjustedPos.polylinePoints.split(" ");
                 adjustedPos.polylinePoints = `${parts[0]} ${parts[1]} ${adjustedPos.x},${adjustedPos.y}`;
