@@ -7,10 +7,7 @@ on:
 jobs:
   notify-slack:
     runs-on: ubuntu-latest
-    if: >
-      github.event.review.user.login == 'copilot-pull-request-reviewer' &&
-      github.event.pull_request.draft == false &&
-      github.event.pull_request.state == 'open'
+    if: github.event.review.user.login == 'copilot-pull-request-reviewer'
     permissions:
       pull-requests: read
       contents: read
