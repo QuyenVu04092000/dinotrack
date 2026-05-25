@@ -1,8 +1,8 @@
 name: PR Slack Review
 
 on:
-  pull_request:
-    types: [opened, ready_for_review]
+  pull_request_review:
+    types: [submitted]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -13,6 +13,11 @@ on:
 jobs:
   notify-slack:
     runs-on: ubuntu-latest
+    # Only run when a review is submitted (any state), or on manual dispatch
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request_review' &&
+       github.event.pull_request.draft == false)
     permissions:
       pull-requests: read
       contents: read
@@ -25,85 +30,127 @@ jobs:
       - name: Get diff stats
         id: diff
         run: |
-          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l | tr -d ' ')
+          BASE=${{ github.event.pull_request.base.ref || 'main' }}
+          FILES=$(git diff --name-only origin/${BASE}...HEAD | wc -l | tr -d ' ')
           echo "file_count=$FILES" >> $GITHUB_OUTPUT
-          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD --stat | tail -1)
-          echo "stat=$DIFF" >> $GITHUB_OUTPUT
-          # Get first 3000 chars of diff for AI summary
-          git diff origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
+          git diff origin/${BASE}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
 
       - name: Generate AI summary in Vietnamese
         id: ai_summary
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          DIFF_CONTENT=$(cat /tmp/diff_snippet.txt | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
-          RESPONSE=$(curl -s https://api.groq.com/openai/v1/chat/completions \
-            -H "Authorization: Bearer $GROQ_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"model\": \"llama-3.3-70b-versatile\",
-              \"max_tokens\": 512,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Tóm tắt ngắn gọn những thay đổi trong PR này bằng tiếng Việt (tối đa 3 câu). Diff:\\n\" $DIFF_CONTENT
-              }]
-            }")
-          SUMMARY=$(echo "$RESPONSE" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data['choices'][0]['message']['content'])" 2>/dev/null || echo "Không thể tạo tóm tắt tự động.")
-          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          python3 - <<'PYEOF'
+          import os, sys, json, urllib.request
+
+          diff = open("/tmp/diff_snippet.txt").read() or "(no diff)"
+          payload = {
+            "model": "llama-3.3-70b-versatile",
+            "max_tokens": 512,
+            "messages": [{
+              "role": "user",
+              "content": f"Tóm tắt ngắn gọn những thay đổi trong PR này bằng tiếng Việt (tối đa 3 câu). Diff:\n{diff}"
+            }]
+          }
+          req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            data=json.dumps(payload).encode(),
+            headers={
+              "Authorization": f"Bearer {os.environ['GROQ_API_KEY']}",
+              "Content-Type": "application/json"
+            }
+          )
+          try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+              data = json.load(resp)
+              summary = data["choices"][0]["message"]["content"].strip()
+          except Exception as e:
+            print(f"Groq error: {e}", file=sys.stderr)
+            summary = "Không thể tạo tóm tắt tự động."
+
+          # Use GitHub multiline output format to handle newlines safely
+          delimiter = "EOF_SUMMARY"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"summary<<{delimiter}\n{summary}\n{delimiter}\n")
+          PYEOF
 
       - name: Post to Slack
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-          PR_BRANCH="${{ github.head_ref }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
-          FILE_COUNT="${{ steps.diff.outputs.file_count }}"
-          AI_SUMMARY="${{ steps.ai_summary.outputs.summary }}"
+          python3 - <<'PYEOF'
+          import os, json, urllib.request
 
-          curl -s -X POST https://slack.com/api/chat.postMessage \
-            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"channel\": \"$SLACK_CHANNEL_ID\",
-              \"blocks\": [
+          pr_number  = "${{ github.event.pull_request.number }}"
+          pr_title   = "${{ github.event.pull_request.title }}"
+          pr_author  = "${{ github.event.pull_request.user.login }}"
+          pr_branch  = "${{ github.event.pull_request.head.ref }}"
+          pr_url     = "${{ github.event.pull_request.html_url }}"
+          file_count = "${{ steps.diff.outputs.file_count }}"
+          ai_summary = "${{ steps.ai_summary.outputs.summary }}"
+          reviewer   = "${{ github.event.review.user.login }}"
+          review_state = "${{ github.event.review.state }}"  # approved / changes_requested / commented
+
+          state_label = {
+            "approved": "✅ Đã approve",
+            "changes_requested": "🔄 Yêu cầu chỉnh sửa",
+            "commented": "💬 Đã comment",
+          }.get(review_state, review_state)
+
+          blocks = [
+            {
+              "type": "header",
+              "text": {"type": "plain_text", "text": "Pull Request đã được review — cần quyết định merge"}
+            },
+            {
+              "type": "section",
+              "fields": [
+                {"type": "mrkdwn", "text": f"*Tiêu đề:*\n{pr_title}"},
+                {"type": "mrkdwn", "text": f"*Tác giả:*\n{pr_author}"},
+                {"type": "mrkdwn", "text": f"*Branch:*\n{pr_branch}"},
+                {"type": "mrkdwn", "text": f"*Số file thay đổi:*\n{file_count}"},
+                {"type": "mrkdwn", "text": f"*Reviewer:*\n{reviewer}"},
+                {"type": "mrkdwn", "text": f"*Trạng thái review:*\n{state_label}"},
+              ]
+            },
+            {
+              "type": "section",
+              "text": {"type": "mrkdwn", "text": f"*Tóm tắt AI:*\n{ai_summary}"}
+            },
+            {
+              "type": "actions",
+              "elements": [
                 {
-                  \"type\": \"header\",
-                  \"text\": { \"type\": \"plain_text\", \"text\": \"Pull Request mới cần review\" }
-                },
-                {
-                  \"type\": \"section\",
-                  \"fields\": [
-                    { \"type\": \"mrkdwn\", \"text\": \"*Tiêu đề:*\\n$PR_TITLE\" },
-                    { \"type\": \"mrkdwn\", \"text\": \"*Tác giả:*\\n$PR_AUTHOR\" },
-                    { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\\n$PR_BRANCH\" },
-                    { \"type\": \"mrkdwn\", \"text\": \"*Số file thay đổi:*\\n$FILE_COUNT\" }
-                  ]
-                },
-                {
-                  \"type\": \"section\",
-                  \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Tóm tắt AI:*\\n$AI_SUMMARY\" }
-                },
-                {
-                  \"type\": \"actions\",
-                  \"elements\": [
-                    {
-                      \"type\": \"button\",
-                      \"text\": { \"type\": \"plain_text\", \"text\": \"Xem diff\" },
-                      \"url\": \"$PR_URL\",
-                      \"action_id\": \"view_diff\"
-                    }
-                  ]
-                },
-                {
-                  \"type\": \"context\",
-                  \"elements\": [
-                    { \"type\": \"mrkdwn\", \"text\": \"Dùng \`/approve $PR_NUMBER\` để duyệt hoặc \`/reject $PR_NUMBER\` để từ chối\" }
-                  ]
+                  "type": "button",
+                  "text": {"type": "plain_text", "text": "Xem PR"},
+                  "url": pr_url,
+                  "action_id": "view_pr"
                 }
               ]
-            }"
+            },
+            {
+              "type": "context",
+              "elements": [
+                {"type": "mrkdwn", "text": f"Dùng `/approve {pr_number}` để merge hoặc `/reject {pr_number}` để từ chối"}
+              ]
+            }
+          ]
+
+          payload = {
+            "channel": os.environ["SLACK_CHANNEL_ID"],
+            "blocks": blocks
+          }
+
+          req = urllib.request.Request(
+            "https://slack.com/api/chat.postMessage",
+            data=json.dumps(payload).encode(),
+            headers={
+              "Authorization": f"Bearer {os.environ['SLACK_BOT_TOKEN']}",
+              "Content-Type": "application/json"
+            }
+          )
+          with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.load(resp)
+            print("Slack response:", result.get("ok"), result.get("error", ""))
+          PYEOF
