@@ -91,26 +91,44 @@ jobs:
           python3 - <<'PYEOF'
           import os, json, urllib.request
 
-          pr_number  = "${{ github.event.pull_request.number || inputs.pr_number }}"
-          pr_title   = "${{ github.event.pull_request.title }}"
-          pr_author  = "${{ github.event.pull_request.user.login }}"
-          pr_branch  = "${{ github.event.pull_request.head.ref }}"
-          pr_url     = "${{ github.event.pull_request.html_url }}"
-          file_count = "${{ steps.diff.outputs.file_count }}"
-          ai_summary = "${{ steps.ai_summary.outputs.summary }}"
+          pr_number   = "${{ github.event.pull_request.number || inputs.pr_number }}"
+          pr_title    = "${{ github.event.pull_request.title }}"
+          pr_author   = "${{ github.event.pull_request.user.login }}"
+          pr_branch   = "${{ github.event.pull_request.head.ref }}"
+          pr_url      = "${{ github.event.pull_request.html_url }}"
+          file_count  = "${{ steps.diff.outputs.file_count }}"
+          ai_summary  = "${{ steps.ai_summary.outputs.summary }}"
+          commit_sha  = "${{ github.event.pull_request.head.sha }}"[:7]
+          commit_msg  = "${{ github.event.head_commit.message || github.event.pull_request.head.sha }}"
+          commit_url  = "${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}"
+          event_type  = "${{ github.event_name }}"
+          action      = "${{ github.event.action }}"
+
+          event_label = {
+            ("pull_request", "opened"): "🆕 PR mới được tạo",
+            ("pull_request", "synchronize"): "🔄 Có commit mới",
+            ("pull_request", "ready_for_review"): "✅ Sẵn sàng review",
+          }.get((event_type, action), "📋 PR cập nhật")
 
           blocks = [
             {
               "type": "header",
-              "text": {"type": "plain_text", "text": "Pull Request moi can review"}
+              "text": {"type": "plain_text", "text": "Pull Request can review"}
             },
             {
               "type": "section",
               "fields": [
-                {"type": "mrkdwn", "text": f"*Tieu de:*\n{pr_title}"},
+                {"type": "mrkdwn", "text": f"*Tieu de:*\n<{pr_url}|{pr_title}>"},
                 {"type": "mrkdwn", "text": f"*Tac gia:*\n{pr_author}"},
-                {"type": "mrkdwn", "text": f"*Branch:*\n{pr_branch}"},
+                {"type": "mrkdwn", "text": f"*Branch:*\n`{pr_branch}`"},
                 {"type": "mrkdwn", "text": f"*So file thay doi:*\n{file_count}"},
+              ]
+            },
+            {
+              "type": "section",
+              "fields": [
+                {"type": "mrkdwn", "text": f"*Su kien:*\n{event_label}"},
+                {"type": "mrkdwn", "text": f"*Commit:*\n<{commit_url}|`{commit_sha}`> {commit_msg.splitlines()[0][:60]}"},
               ]
             },
             {
