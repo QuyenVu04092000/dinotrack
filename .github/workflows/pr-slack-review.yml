@@ -47,14 +47,14 @@ jobs:
         if: steps.check.outputs.pr_state == 'open'
         id: ai_summary
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           python3 - <<'PYEOF'
           import os, sys, json, urllib.request
 
           diff = open("/tmp/diff_snippet.txt").read() or "(no diff)"
           payload = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "claude-haiku-4-5-20251001",
             "max_tokens": 512,
             "messages": [{
               "role": "user",
@@ -62,19 +62,20 @@ jobs:
             }]
           }
           req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
+            "https://api.anthropic.com/v1/messages",
             data=json.dumps(payload).encode(),
             headers={
-              "Authorization": f"Bearer {os.environ['GROQ_API_KEY']}",
+              "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+              "anthropic-version": "2023-06-01",
               "Content-Type": "application/json"
             }
           )
           try:
             with urllib.request.urlopen(req, timeout=30) as resp:
               data = json.load(resp)
-              summary = data["choices"][0]["message"]["content"].strip()
+              summary = data["content"][0]["text"].strip()
           except Exception as e:
-            print(f"Groq error: {e}", file=sys.stderr)
+            print(f"Anthropic error: {e}", file=sys.stderr)
             summary = "Không thể tạo tóm tắt tự động."
 
           delimiter = "EOF_SUMMARY"
