@@ -12,6 +12,7 @@ interface DonutChartProps {
   labelDistance?: number;
   minLabelPercentage?: number;
   centerText?: string;
+  emptyText?: string;
   activeIndex?: number | null;
   onSliceHover?: (data: DonutChartData | null) => void;
   onSliceClick?: (data: DonutChartData | null, index: number | null) => void;
@@ -24,6 +25,7 @@ export function DonutChart({
   labelDistance = 38,
   minLabelPercentage = 5,
   centerText: initialCenterText,
+  emptyText = "Không có dữ liệu",
   activeIndex: externalActiveIndex,
   onSliceHover,
   onSliceClick,
@@ -41,6 +43,14 @@ export function DonutChart({
     });
 
   const highlightIndex = activeIndex !== null ? activeIndex : hoveredIndex;
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center w-full h-40 text-sm text-gray-400">
+        {emptyText}
+      </div>
+    );
+  }
 
   return (
     <div
