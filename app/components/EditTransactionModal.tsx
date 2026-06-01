@@ -70,7 +70,7 @@ export function EditTransactionModal({ transaction, categories, onSave, onDelete
     const newDigits = inputValue.replace(/\D/g, "");
 
     let effectiveDigits = newDigits;
-    if (inputValue.length < amountValue.length && newDigits === prevDigits) {
+    if (newDigits === prevDigits && inputValue !== amountValue && inputValue.length <= amountValue.length) {
       effectiveDigits = prevDigits.slice(0, -1);
     }
     setAmountValue(formatAmountInput(effectiveDigits));

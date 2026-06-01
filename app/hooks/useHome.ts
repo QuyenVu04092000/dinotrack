@@ -171,10 +171,10 @@ export const useHome = (): UseHomeResult => {
     const prevDigits = amountValue.replace(/\D/g, "");
     const newDigits = inputValue.replace(/\D/g, "");
 
-    // When user deletes a formatting character (separator or "đ"),
-    // the input shrinks but digit count stays the same — remove the last real digit instead
     let effectiveDigits = newDigits;
-    if (inputValue.length < amountValue.length && newDigits === prevDigits) {
+    // Detect deletion of any formatting character (separator, "đ", or Vietnamese
+    // keyboard decomposition of "đ" → "d"): digit count unchanged but value modified
+    if (newDigits === prevDigits && inputValue !== amountValue && inputValue.length <= amountValue.length) {
       effectiveDigits = prevDigits.slice(0, -1);
     }
 
