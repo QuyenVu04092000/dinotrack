@@ -168,8 +168,17 @@ export const useHome = (): UseHomeResult => {
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-    const formatted = formatAmountInput(inputValue);
-    setAmountValue(formatted);
+    const prevDigits = amountValue.replace(/\D/g, "");
+    const newDigits = inputValue.replace(/\D/g, "");
+
+    // When user deletes a formatting character (separator or "đ"),
+    // the input shrinks but digit count stays the same — remove the last real digit instead
+    let effectiveDigits = newDigits;
+    if (inputValue.length < amountValue.length && newDigits === prevDigits) {
+      effectiveDigits = prevDigits.slice(0, -1);
+    }
+
+    setAmountValue(formatAmountInput(effectiveDigits));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

@@ -12,6 +12,16 @@ export interface CreateTransactionRequest {
   note?: string;
 }
 
+export interface UpdateTransactionRequest {
+  type?: ApiTransactionType;
+  amount?: number;
+  categoryId?: string;
+  subCategoryId?: string | null;
+  status?: string;
+  createdAt?: string;
+  note?: string;
+}
+
 export interface TransactionResponse {
   id: string;
   type: ApiTransactionType;
