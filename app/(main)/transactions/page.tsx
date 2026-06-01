@@ -14,6 +14,7 @@ import Image from "next/image";
 import { useTransactionsPage } from "app/hooks/useTransactionsPage";
 import { imagePath } from "app/utilities/constants/common/assets";
 import type { GroupedTransaction } from "app/types/transactionsPage";
+import { EditTransactionModal } from "app/components/EditTransactionModal";
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -45,6 +46,11 @@ export default function TransactionsPage() {
     toggleDraftCategory,
     toggleDraftSubCategory,
     applyFilterAndClose,
+    editingTransaction,
+    handleEditClick,
+    handleEditSave,
+    handleEditDelete,
+    handleEditClose,
   } = useTransactionsPage();
 
   // Show footer on mount
@@ -369,6 +375,7 @@ export default function TransactionsPage() {
                       {/* Edit Button */}
                       <button
                         type="button"
+                        onClick={() => handleEditClick(tx)}
                         className="flex h-6 w-6 items-center justify-center rounded-full p-1"
                         aria-label="Chỉnh sửa"
                       >
@@ -387,6 +394,17 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
+      {/* Edit Transaction Modal */}
+      {editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          categories={categories}
+          onSave={handleEditSave}
+          onDelete={handleEditDelete}
+          onClose={handleEditClose}
+        />
+      )}
+
       {/* Filter Bottom Sheet */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-[1px]">

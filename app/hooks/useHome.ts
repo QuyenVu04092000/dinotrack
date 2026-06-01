@@ -10,6 +10,7 @@ import {
   formatAmountInput,
   parseAmountInput,
   getDaysInMonth,
+  toVietnamISO,
 } from "app/utilities/common/functions";
 import { AuthUser } from "app/types/auth";
 import { categoryApi } from "app/services/categoryApi";
@@ -168,8 +169,17 @@ export const useHome = (): UseHomeResult => {
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-    const formatted = formatAmountInput(inputValue);
-    setAmountValue(formatted);
+    const prevDigits = amountValue.replace(/\D/g, "");
+    const newDigits = inputValue.replace(/\D/g, "");
+
+    let effectiveDigits = newDigits;
+    // Detect deletion of any formatting character (separator, "đ", or Vietnamese
+    // keyboard decomposition of "đ" → "d"): digit count unchanged but value modified
+    if (newDigits === prevDigits && inputValue !== amountValue && inputValue.length <= amountValue.length) {
+      effectiveDigits = prevDigits.slice(0, -1);
+    }
+
+    setAmountValue(formatAmountInput(effectiveDigits));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -205,7 +215,7 @@ export const useHome = (): UseHomeResult => {
         categoryId: selectedCategory.categoryId,
         subCategoryId: selectedCategory.id,
         status: "ACTIVE",
-        createdAt: selectedDate,
+        createdAt: toVietnamISO(selectedDate),
         note: note || undefined,
       });
       setSubmitSuccess("Đã lưu giao dịch thành công.");

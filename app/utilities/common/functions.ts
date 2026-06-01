@@ -53,3 +53,13 @@ export const formatTimeHHMM = (date: Date | string): string => {
   const minutes = String(d.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 };
+
+// Build an ISO 8601 string with Vietnam +07:00 offset from a YYYY-MM-DD date and
+// an optional HH:mm:ss time. Defaults to current local time when time is omitted.
+export const toVietnamISO = (date: string, time?: string): string => {
+  const t = time ?? (() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+  })();
+  return `${date}T${t}+07:00`;
+};
