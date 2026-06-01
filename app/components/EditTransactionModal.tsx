@@ -3,7 +3,7 @@
 import React from "react";
 import type { TransactionResponse, UpdateTransactionRequest } from "app/types/transaction";
 import type { Category, SubCategory } from "app/types/category";
-import { formatAmountInput, parseAmountInput, getDaysInMonth } from "app/utilities/common/functions";
+import { formatAmountInput, parseAmountInput, getDaysInMonth, toVietnamISO } from "app/utilities/common/functions";
 
 interface EditTransactionModalProps {
   transaction: TransactionResponse;
@@ -89,12 +89,16 @@ export function EditTransactionModal({ transaction, categories, onSave, onDelete
     }
     try {
       setIsSaving(true);
+      // Preserve the original transaction time when the date is changed
+      const originalDate = new Date(transaction.createdAt);
+      const originalTime = `${String(originalDate.getHours()).padStart(2, "0")}:${String(originalDate.getMinutes()).padStart(2, "0")}:${String(originalDate.getSeconds()).padStart(2, "0")}`;
+
       await onSave(transaction.id, {
         type: activeType === "expense" ? "out" : "in",
         amount,
         categoryId: selectedCategory.categoryId,
         subCategoryId: selectedCategory.id,
-        createdAt: selectedDate,
+        createdAt: toVietnamISO(selectedDate, originalTime),
         note: note || undefined,
       });
       onClose();

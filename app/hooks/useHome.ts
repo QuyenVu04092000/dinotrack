@@ -10,6 +10,7 @@ import {
   formatAmountInput,
   parseAmountInput,
   getDaysInMonth,
+  toVietnamISO,
 } from "app/utilities/common/functions";
 import { AuthUser } from "app/types/auth";
 import { categoryApi } from "app/services/categoryApi";
@@ -214,7 +215,7 @@ export const useHome = (): UseHomeResult => {
         categoryId: selectedCategory.categoryId,
         subCategoryId: selectedCategory.id,
         status: "ACTIVE",
-        createdAt: selectedDate,
+        createdAt: toVietnamISO(selectedDate),
         note: note || undefined,
       });
       setSubmitSuccess("Đã lưu giao dịch thành công.");
