@@ -35,14 +35,31 @@ jobs:
           PR_STATE=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.state')
           echo "pr_state=$PR_STATE" >> $GITHUB_OUTPUT
 
+      - name: Fetch PR data
+        if: steps.check.outputs.pr_state == 'open'
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number || inputs.pr_number }}"
+          PR_JSON=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+          echo "title=$(echo "$PR_JSON" | jq -r '.title')"           >> $GITHUB_OUTPUT
+          echo "author=$(echo "$PR_JSON" | jq -r '.user.login')"     >> $GITHUB_OUTPUT
+          echo "branch=$(echo "$PR_JSON" | jq -r '.head.ref')"       >> $GITHUB_OUTPUT
+          echo "url=$(echo "$PR_JSON" | jq -r '.html_url')"          >> $GITHUB_OUTPUT
+          echo "sha=$(echo "$PR_JSON" | jq -r '.head.sha')"          >> $GITHUB_OUTPUT
+          echo "base=$(echo "$PR_JSON" | jq -r '.base.ref')"         >> $GITHUB_OUTPUT
+          echo "commit_msg=$(echo "$PR_JSON" | jq -r '.title')"      >> $GITHUB_OUTPUT
+
       - name: Get diff stats
         if: steps.check.outputs.pr_state == 'open'
         id: diff
         run: |
-          BASE=${{ github.event.pull_request.base.ref || 'main' }}
-          FILES=$(git diff --name-only origin/${BASE}...HEAD | wc -l | tr -d ' ')
+          BASE=${{ steps.pr.outputs.base }}
+          git fetch origin $BASE
+          FILES=$(git diff --name-only origin/${BASE}...origin/${{ steps.pr.outputs.branch }} | wc -l | tr -d ' ')
           echo "file_count=$FILES" >> $GITHUB_OUTPUT
-          git diff origin/${BASE}...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
+          git diff origin/${BASE}...origin/${{ steps.pr.outputs.branch }} -- '*.ts' '*.tsx' '*.js' '*.jsx' | head -c 3000 > /tmp/diff_snippet.txt
 
       - name: Generate AI summary in Vietnamese
         if: steps.check.outputs.pr_state == 'open'
@@ -94,15 +111,15 @@ jobs:
           import os, json, urllib.request
 
           pr_number   = "${{ github.event.pull_request.number || inputs.pr_number }}"
-          pr_title    = "${{ github.event.pull_request.title }}"
-          pr_author   = "${{ github.event.pull_request.user.login }}"
-          pr_branch   = "${{ github.event.pull_request.head.ref }}"
-          pr_url      = "${{ github.event.pull_request.html_url }}"
+          pr_title    = "${{ steps.pr.outputs.title }}"
+          pr_author   = "${{ steps.pr.outputs.author }}"
+          pr_branch   = "${{ steps.pr.outputs.branch }}"
+          pr_url      = "${{ steps.pr.outputs.url }}"
           file_count  = "${{ steps.diff.outputs.file_count }}"
           ai_summary  = os.environ.get("AI_SUMMARY", "Không thể tạo tóm tắt tự động.")
-          commit_sha  = "${{ github.event.pull_request.head.sha }}"[:7]
-          commit_msg  = "${{ github.event.head_commit.message || github.event.pull_request.head.sha }}"
-          commit_url  = "${{ github.event.pull_request.html_url }}/commits/${{ github.event.pull_request.head.sha }}"
+          commit_sha  = "${{ steps.pr.outputs.sha }}"[:7]
+          commit_msg  = "${{ steps.pr.outputs.commit_msg }}" or "${{ steps.pr.outputs.sha }}"
+          commit_url  = "${{ steps.pr.outputs.url }}/commits/${{ steps.pr.outputs.sha }}"
           event_type  = "${{ github.event_name }}"
           action      = "${{ github.event.action }}"
 
@@ -130,7 +147,7 @@ jobs:
               "type": "section",
               "fields": [
                 {"type": "mrkdwn", "text": f"*Su kien:*\n{event_label}"},
-                {"type": "mrkdwn", "text": f"*Commit:*\n<{commit_url}|`{commit_sha}`> {commit_msg.splitlines()[0][:60]}"},
+                {"type": "mrkdwn", "text": f"*Commit:*\n<{commit_url}|`{commit_sha}`> {(commit_msg.splitlines() or [''])[0][:60]}"},
               ]
             },
             {
