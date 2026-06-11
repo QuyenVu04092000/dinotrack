@@ -1,6 +1,6 @@
 // File: app/services/transactionApi.ts
 import { apiClient } from "../lib/apiClient";
-import { CreateTransactionRequest, TransactionResponse } from "../types/transaction";
+import { CreateTransactionRequest, UpdateTransactionRequest, TransactionResponse } from "../types/transaction";
 import type {
   TodaySpentResponse,
   ReportResponse,
@@ -17,6 +17,15 @@ export const transactionApi = {
   createTransaction: async (payload: CreateTransactionRequest): Promise<TransactionResponse> => {
     const response = await apiClient.post<TransactionResponse>("/transactions", payload);
     return response.data;
+  },
+
+  updateTransaction: async (id: string, payload: UpdateTransactionRequest): Promise<TransactionResponse> => {
+    const response = await apiClient.put<TransactionResponse>(`/transactions/${id}`, payload);
+    return response.data;
+  },
+
+  deleteTransaction: async (id: string): Promise<void> => {
+    await apiClient.delete(`/transactions/${id}`);
   },
 
   getTodaySpent: async (): Promise<number> => {

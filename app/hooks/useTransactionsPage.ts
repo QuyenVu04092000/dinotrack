@@ -5,7 +5,7 @@ import { useAuthContext } from "app/context/AuthContext";
 import { useCategories } from "app/hooks/useCategories";
 import { transactionApi } from "app/services/transactionApi";
 import { categoryApi } from "app/services/categoryApi";
-import type { TransactionResponse } from "app/types/transaction";
+import type { TransactionResponse, UpdateTransactionRequest } from "app/types/transaction";
 import type { Category, SubCategory } from "app/types/category";
 import type { DailyTransaction, GroupedTransaction, UseTransactionsPageResult } from "app/types/transactionsPage";
 
@@ -37,6 +37,7 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
 
   const { categories, isLoading: categoriesLoading } = useCategories();
   const [refreshToken, setRefreshToken] = useState(0);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionResponse | null>(null);
 
   // Always ensure we have the latest profile (startDayMonth, etc.) on this page
   useEffect(() => {
@@ -188,7 +189,7 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
     }
 
     fetchCalendarTransactions();
-  }, [monthPeriod.startDate, monthPeriod.endDate, authLoading]);
+  }, [monthPeriod.startDate, monthPeriod.endDate, authLoading, refreshToken]);
 
   // Fetch transaction list (filtered by selected date or all month)
   useEffect(() => {
@@ -256,7 +257,7 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [monthPeriod.startDate, monthPeriod.endDate, selectedDate, currentMonth, authLoading, selectedSubCategoryIds]);
+  }, [monthPeriod.startDate, monthPeriod.endDate, selectedDate, currentMonth, authLoading, selectedSubCategoryIds, refreshToken]);
 
   // Calculate summary totals (use calendar transactions for month summary)
   const summary = useMemo(() => {
@@ -469,6 +470,24 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
 
   const weekDays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
+  const handleEditClick = useCallback((tx: TransactionResponse) => {
+    setEditingTransaction(tx);
+  }, []);
+
+  const handleEditClose = useCallback(() => {
+    setEditingTransaction(null);
+  }, []);
+
+  const handleEditSave = useCallback(async (id: string, payload: UpdateTransactionRequest) => {
+    await transactionApi.updateTransaction(id, payload);
+    setRefreshToken((t) => t + 1);
+  }, []);
+
+  const handleEditDelete = useCallback(async (id: string) => {
+    await transactionApi.deleteTransaction(id);
+    setRefreshToken((t) => t + 1);
+  }, []);
+
   return {
     authLoading,
     monthPeriod,
@@ -495,5 +514,10 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
     toggleDraftCategory,
     toggleDraftSubCategory,
     applyFilterAndClose,
+    editingTransaction,
+    handleEditClick,
+    handleEditSave,
+    handleEditDelete,
+    handleEditClose,
   };
 };

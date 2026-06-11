@@ -1,4 +1,4 @@
-import type { TransactionResponse } from "app/types/transaction";
+import type { TransactionResponse, UpdateTransactionRequest } from "app/types/transaction";
 import type { Category } from "app/types/category";
 
 export interface DailyTransaction {
@@ -49,4 +49,9 @@ export interface UseTransactionsPageResult {
   toggleDraftCategory: (category: Category) => void;
   toggleDraftSubCategory: (subCategoryId: string) => void;
   applyFilterAndClose: () => void;
+  editingTransaction: TransactionResponse | null;
+  handleEditClick: (tx: TransactionResponse) => void;
+  handleEditSave: (id: string, payload: UpdateTransactionRequest) => Promise<void>;
+  handleEditDelete: (id: string) => Promise<void>;
+  handleEditClose: () => void;
 }
