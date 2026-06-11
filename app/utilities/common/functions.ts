@@ -53,3 +53,26 @@ export const formatTimeHHMM = (date: Date | string): string => {
   const minutes = String(d.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 };
+
+/**
+ * Returns the first day (day=1) of the current financial period month,
+ * based on the user's configured start day of month.
+ *
+ * @param startDayMonth - The day of month the financial period starts (e.g. 15)
+ * @returns Date set to the 1st of the financial period's month (used as a month anchor)
+ *
+ * Example: today = 10/06, startDayMonth = 15 → period is 15/05–14/06 → returns new Date(year, 4, 1)
+ */
+export function getCurrentFinancialPeriodStart(startDayMonth: number): Date {
+  const today = new Date();
+  let year = today.getFullYear();
+  let month = today.getMonth(); // 0-indexed
+  if (today.getDate() < startDayMonth) {
+    month -= 1;
+    if (month < 0) {
+      month = 11;
+      year -= 1;
+    }
+  }
+  return new Date(year, month, 1);
+}

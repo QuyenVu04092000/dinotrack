@@ -1,4 +1,22 @@
 import type { SubCategory, Category } from "./category";
+import type { BudgetBySubCategoryResponse } from "./budget";
+
+export type CategoryBudgets = {
+  category: Category;
+  budgets: BudgetBySubCategoryResponse[];
+  background: string;
+};
+
+export interface UseBudgetsListResult {
+  loading: boolean;
+  error: string | null;
+  periodLabel: string;
+  budgetsByCategory: CategoryBudgets[];
+  isCurrentMonth: boolean;
+  hasStartDayMonth: boolean;
+  goToPrevMonth: () => void;
+  goToNextMonth: () => void;
+}
 
 export interface UseCreateBudgetProps {
   category: SubCategory;

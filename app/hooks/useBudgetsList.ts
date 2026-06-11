@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthContext } from "app/context/AuthContext";
 import { useCategories } from "app/hooks/useCategories";
 import { budgetApi } from "app/services/budgetApi";
-import type { Category } from "app/types/category";
-import { BudgetBySubCategoryResponse } from "app/types/budget";
-
-type CategoryBudgets = {
-  category: Category;
-  budgets: BudgetBySubCategoryResponse[];
-  background: string;
-};
+import { extractErrorMessage } from "app/lib/apiClient";
+import { getCurrentFinancialPeriodStart } from "app/utilities/common/functions";
+import type { CategoryBudgets, UseBudgetsListResult } from "app/types/budgets";
 
 const CATEGORY_COLORS = [
   "linear-gradient(180deg, #DCF3FE 0%, rgba(186, 232, 253, 0.15) 100%)",
@@ -29,42 +24,58 @@ const getCategoryColor = (id: string) => {
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
-  const index = Math.abs(hash) % CATEGORY_COLORS.length;
-  return CATEGORY_COLORS[index];
+  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
 };
 
-export const useBudgetsList = () => {
+export const useBudgetsList = (): UseBudgetsListResult => {
   const { user, reloadProfile } = useAuthContext();
   const { categories } = useCategories();
-  const [budgets, setBudgets] = useState<BudgetBySubCategoryResponse[]>([]);
+  const startDayMonth = user?.startDayMonth ?? 1;
+
+  const currentPeriodStart = useMemo(
+    () => getCurrentFinancialPeriodStart(startDayMonth),
+    [startDayMonth],
+  );
+
+  const [selectedMonth, setSelectedMonth] = useState<Date>(currentPeriodStart);
+  const [budgets, setBudgets] = useState<Awaited<ReturnType<typeof budgetApi.getBudgetsSubCategories>>>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sync selectedMonth when startDayMonth changes (e.g. after reloadProfile)
+  useEffect(() => {
+    setSelectedMonth(getCurrentFinancialPeriodStart(startDayMonth));
+  }, [startDayMonth]);
 
   const { monthParam, periodLabel } = useMemo(() => {
-    const today = new Date();
-    const startDay = user?.startDayMonth ?? 1;
-    let periodYear = today.getFullYear();
-    let periodMonth = today.getMonth();
-    if (today.getDate() < startDay) {
-      periodMonth -= 1;
-      if (periodMonth < 0) {
-        periodMonth = 11;
-        periodYear -= 1;
-      }
-    }
-    const month = periodMonth + 1;
-    const startDate = new Date(periodYear, periodMonth, startDay);
-    const endDate = new Date(periodYear, periodMonth + 1, startDay - 1);
+    const year = selectedMonth.getFullYear();
+    const monthNum = selectedMonth.getMonth() + 1;
+    const startDate = new Date(year, selectedMonth.getMonth(), startDayMonth);
+    const endDate = new Date(year, selectedMonth.getMonth() + 1, startDayMonth - 1);
     const d1 = String(startDate.getDate()).padStart(2, "0");
-    const m1 = month;
+    const m1 = startDate.getMonth() + 1;
     const d2 = String(endDate.getDate()).padStart(2, "0");
     const m2 = endDate.getMonth() + 1;
     return {
-      monthParam: `${periodYear}-${String(month).padStart(2, "0")}`,
-      periodLabel: `Tháng ${month} (${d1}/${m1}-${d2}/${m2})`,
+      monthParam: `${year}-${String(monthNum).padStart(2, "0")}`,
+      periodLabel: `Tháng ${monthNum} (${d1}/${m1}-${d2}/${m2})`,
     };
-  }, [user?.startDayMonth]);
+  }, [selectedMonth, startDayMonth]);
 
-  // Ensure latest profile (startDayMonth) when budgets list is used
+  const isCurrentMonth =
+    selectedMonth.getFullYear() === currentPeriodStart.getFullYear() &&
+    selectedMonth.getMonth() === currentPeriodStart.getMonth();
+
+  const hasStartDayMonth = Boolean(user?.startDayMonth);
+
+  const goToPrevMonth = useCallback(() => {
+    setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  }, []);
+
+  const goToNextMonth = useCallback(() => {
+    setSelectedMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  }, []);
+
   useEffect(() => {
     reloadProfile();
   }, [reloadProfile]);
@@ -72,13 +83,12 @@ export const useBudgetsList = () => {
   useEffect(() => {
     const fetchBudgets = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const data = await budgetApi.getBudgetsSubCategories({
-          month: monthParam,
-        });
+        const data = await budgetApi.getBudgetsSubCategories({ month: monthParam });
         setBudgets(data);
       } catch (err) {
-        console.error("Failed to fetch budgets:", err);
+        setError(extractErrorMessage(err));
         setBudgets([]);
       } finally {
         setLoading(false);
@@ -112,7 +122,12 @@ export const useBudgetsList = () => {
 
   return {
     loading,
+    error,
     periodLabel,
     budgetsByCategory,
+    isCurrentMonth,
+    hasStartDayMonth,
+    goToPrevMonth,
+    goToNextMonth,
   };
 };

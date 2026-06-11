@@ -15,33 +15,26 @@ function TransactionCategoryPageInner() {
     searchParams,
     categoryId,
     subCategoryId,
-    userBalance,
-    suggestedDailyValue,
-    transactions,
+    allTransactions,
     summary,
     isLoading,
     error,
-    subCategory,
-    category,
     viewMode,
     setViewMode,
     isViewModeOpen,
     setIsViewModeOpen,
     selectedBarIndex,
+    isLoadingPeriod,
     budget,
-    isLoadingBudget,
     chartData,
     handleChartBarClick,
     dailyMetrics,
     groupedTransactions,
-    timeRangeSubtitle,
     subCategoryName,
     subCategoryIcon,
+    suggestedDailyValue,
     maxChartValue,
     chartHeight,
-    maxSpendingDay,
-    // expose totals for summary card
-    // (computed inside hook but used only for display here)
   } = useTransactionCategoryPage();
 
   return (
@@ -129,9 +122,9 @@ function TransactionCategoryPageInner() {
             <div className="flex-1 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#1F2532]">{subCategoryName}</h2>
-                {/* Total amount is sum of all transactions in current selection */}
+                {/* Total amount is sum of all allTransactions in current selection */}
                 <p className="text-sm font-semibold text-[#1F2532]">
-                  {formatVietnameseCurrency(transactions.reduce((sum, tx) => sum + tx.amount, 0)).replace("₫", "đ")}
+                  {formatVietnameseCurrency(allTransactions.reduce((sum, tx) => sum + tx.amount, 0)).replace("₫", "đ")}
                 </p>
               </div>
               {/* Progress Bar - simplified, showing spent vs total */}
@@ -140,9 +133,9 @@ function TransactionCategoryPageInner() {
                   className="bg-[#22C55E] h-full rounded-full transition-all"
                   style={{
                     width: `${
-                      transactions.length > 0
-                        ? (transactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0) /
-                            transactions.reduce((sum, tx) => sum + tx.amount, 0)) *
+                      allTransactions.length > 0
+                        ? (allTransactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0) /
+                            allTransactions.reduce((sum, tx) => sum + tx.amount, 0)) *
                           100
                         : 0
                     }%`,
@@ -154,7 +147,7 @@ function TransactionCategoryPageInner() {
                   <span className="font-normal">Đã chi:</span>
                   <span className="font-semibold">
                     {formatVietnameseCurrency(
-                      transactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0),
+                      allTransactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0),
                     ).replace("₫", "đ")}
                   </span>
                 </div>
@@ -164,8 +157,8 @@ function TransactionCategoryPageInner() {
                     {formatVietnameseCurrency(
                       Math.max(
                         0,
-                        transactions.reduce((sum, tx) => sum + tx.amount, 0) -
-                          transactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0),
+                        allTransactions.reduce((sum, tx) => sum + tx.amount, 0) -
+                          allTransactions.filter((tx) => tx.type === "out").reduce((sum, tx) => sum + tx.amount, 0),
                       ),
                     ).replace("₫", "đ")}
                   </span>
@@ -371,7 +364,7 @@ function TransactionCategoryPageInner() {
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && transactions.length === 0 && subCategoryId && (
+        {!isLoading && !isLoadingPeriod && !error && allTransactions.length === 0 && subCategoryId && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <svg
@@ -396,8 +389,33 @@ function TransactionCategoryPageInner() {
           </div>
         )}
 
+        {/* Period loading skeleton — only list area, chart stays visible */}
+        {isLoadingPeriod && (
+          <div className="space-y-2 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-[#EDEEF1]">
+                  <div className="h-4 w-24 bg-[#EDEEF1] rounded" />
+                </div>
+                <div className="divide-y divide-[#F8FAFC]">
+                  {[1, 2].map((j) => (
+                    <div key={j} className="flex items-center gap-3 px-4 py-3 h-[60px]">
+                      <div className="w-10 h-10 rounded-full bg-[#EDEEF1] flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-32 bg-[#EDEEF1] rounded" />
+                        <div className="h-3 w-20 bg-[#EDEEF1] rounded" />
+                      </div>
+                      <div className="h-3 w-16 bg-[#EDEEF1] rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Transaction List */}
-        {!isLoading && !error && subCategoryId && transactions.length > 0 && (
+        {!isLoading && !isLoadingPeriod && !error && subCategoryId && groupedTransactions.length > 0 && (
           <div className="space-y-1">
             {/* Section Header */}
             <div className="flex items-center justify-between px-3 py-2">
