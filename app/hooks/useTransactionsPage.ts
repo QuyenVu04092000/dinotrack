@@ -140,7 +140,7 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
       monthLabel: `Tháng ${month} (${String(startDate.getDate()).padStart(
         2,
         "0",
-      )}/${month}-${String(endDate.getDate()).padStart(2, "0")}/${month === 12 ? 1 : month + 1})`,
+      )}/${month}-${String(endDate.getDate()).padStart(2, "0")}/${endDate.getMonth() + 1})`,
     };
   }, [currentMonth, user?.startDayMonth]);
 

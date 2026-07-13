@@ -167,9 +167,13 @@ export default function TransactionsPage() {
           <div className="h-6 w-px bg-[#EBEEF3]" />
 
           {/* Chênh lệch */}
-          <div className="flex-1 flex flex-col gap-1 items-center justify-center px-3 py-2 rounded-lg">
+          <div className="flex-1 min-w-0 flex flex-col gap-1 items-center justify-center px-2 py-2 rounded-lg">
             <p className="text-xs font-medium text-[#597397]">Chênh lệch</p>
-            <p className={`text-sm font-semibold ${summary.difference >= 0 ? "text-[#22C55E]" : "text-[#EF4444]"}`}>
+            <p
+              className={`text-[13px] font-semibold whitespace-nowrap ${
+                summary.difference >= 0 ? "text-[#22C55E]" : "text-[#EF4444]"
+              }`}
+            >
               {summary.difference >= 0 ? "+" : ""}
               {formatVietnameseCurrency(summary.difference).replace("₫", "đ")}
             </p>
