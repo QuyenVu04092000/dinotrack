@@ -113,7 +113,7 @@ export default function ReportPage() {
       </div>
 
       <div
-        className="relative z-10 flex w-full flex-col items-center gap-3 px-4 pb-24 overflow-visible"
+        className="relative z-10 flex w-full flex-col items-center gap-3 px-4 pb-40 overflow-visible"
         style={{ paddingTop: "calc(8px + env(safe-area-inset-top, 0px))" }}
       >
         {/* Summary Cards */}
@@ -142,9 +142,7 @@ export default function ReportPage() {
               }}
             />
             <p className="text-[14px] text-sm text-black font-medium">Chi hôm nay</p>
-            <p className="mt-1 text-base font-semibold text-black">
-              {todaySpent > 0 ? `-${formattedTodaySpent}` : formattedTodaySpent}
-            </p>
+            <p className="mt-1 text-base font-semibold text-black">{formattedTodaySpent}</p>
           </div>
         </div>
 
@@ -273,7 +271,7 @@ export default function ReportPage() {
                       {reportData?.previousPeriod?.expenseChangePercent}%)
                     </p>
                     <p className="text-sm font-medium text-[#3B4D69]">
-                      so vs {period === "week" ? "tuần" : "tháng"} trước
+                      so với {period === "week" ? "tuần" : "tháng"} trước
                     </p>
                   </div>
                 ) : (
