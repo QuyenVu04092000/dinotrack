@@ -10,7 +10,19 @@ import MonthNavigator from "app/components/budgets/MonthNavigator";
 
 export default function ListBudgets() {
   const router = useRouter();
-  const { loading, error, periodLabel, budgetsByCategory, isCurrentMonth, hasStartDayMonth, goToPrevMonth, goToNextMonth } = useBudgetsList();
+  const {
+    loading,
+    error,
+    periodLabel,
+    monthParam,
+    budgetsByCategory,
+    isFutureMonth,
+    canCreateBudget,
+    isNextDisabled,
+    hasStartDayMonth,
+    goToPrevMonth,
+    goToNextMonth,
+  } = useBudgetsList();
   const params = new URLSearchParams();
 
   return (
@@ -25,10 +37,10 @@ export default function ListBudgets() {
         </div>
         <div className="absolute left-1/2 bottom-2 flex w-full -translate-x-1/2 items-center justify-between gap-2 px-4">
           <h1 className="flex-1 text-lg font-semibold leading-[1.5] text-white">Ngân sách</h1>
-          {isCurrentMonth && (
+          {canCreateBudget && (
             <button
               type="button"
-              onClick={() => router.push("/budgets/create-budget")}
+              onClick={() => router.push(`/budgets/create-budget?month=${monthParam}`)}
               className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -50,7 +62,7 @@ export default function ListBudgets() {
         periodLabel={periodLabel}
         onPrev={goToPrevMonth}
         onNext={goToNextMonth}
-        isNextDisabled={isCurrentMonth}
+        isNextDisabled={isNextDisabled}
       />
 
       {!hasStartDayMonth && (
@@ -76,8 +88,10 @@ export default function ListBudgets() {
           </div>
         ) : budgetsByCategory.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-[#597397]">Tháng này chưa có ngân sách nào</p>
-            {isCurrentMonth && (
+            <p className="text-sm text-[#597397]">
+              {isFutureMonth ? "Chưa lên kế hoạch ngân sách cho tháng này" : "Tháng này chưa có ngân sách nào"}
+            </p>
+            {canCreateBudget && (
               <p className="mt-1 text-xs text-[#8E95A2]">Nhấn + Thêm ngân sách để tạo</p>
             )}
           </div>

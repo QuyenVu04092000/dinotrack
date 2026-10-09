@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useBudgets } from "app/hooks/useBudgets";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { SubCategory } from "app/types/category";
 import { useFooter } from "app/context/FooterContext";
 import ListCategories from "app/components/budgets/ListCategories";
 import CreateBudget from "app/components/budgets/CreateBudget";
 
-export default function CreateBudgetsPage() {
-  // Get current month and date range
+function CreateBudgetsContent() {
+  const month = useSearchParams().get("month");
   const [category, setCategory] = useState<SubCategory>({} as SubCategory);
   const { setFooterVisible } = useFooter();
 
@@ -25,7 +23,15 @@ export default function CreateBudgetsPage() {
   return (
     <>
       {!category.id && <ListCategories setCategory={setCategory} />}
-      {category.id && <CreateBudget category={category} setCategory={setCategory} />}
+      {category.id && <CreateBudget category={category} setCategory={setCategory} month={month} />}
     </>
+  );
+}
+
+export default function CreateBudgetsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CreateBudgetsContent />
+    </Suspense>
   );
 }
