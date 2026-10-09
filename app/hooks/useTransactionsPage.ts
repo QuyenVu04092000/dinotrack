@@ -140,7 +140,7 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
       monthLabel: `Tháng ${month} (${String(startDate.getDate()).padStart(
         2,
         "0",
-      )}/${month}-${String(endDate.getDate()).padStart(2, "0")}/${month === 12 ? 1 : month + 1})`,
+      )}/${month}-${String(endDate.getDate()).padStart(2, "0")}/${endDate.getMonth() + 1})`,
     };
   }, [currentMonth, user?.startDayMonth]);
 
@@ -478,15 +478,25 @@ export const useTransactionsPage = (): UseTransactionsPageResult => {
     setEditingTransaction(null);
   }, []);
 
-  const handleEditSave = useCallback(async (id: string, payload: UpdateTransactionRequest) => {
-    await transactionApi.updateTransaction(id, payload);
-    setRefreshToken((t) => t + 1);
-  }, []);
+  const handleEditSave = useCallback(
+    async (id: string, payload: UpdateTransactionRequest) => {
+      await transactionApi.updateTransaction(id, payload);
+      setRefreshToken((t) => t + 1);
+      // Refresh user profile so the balance reflects the amount change
+      reloadProfile();
+    },
+    [reloadProfile],
+  );
 
-  const handleEditDelete = useCallback(async (id: string) => {
-    await transactionApi.deleteTransaction(id);
-    setRefreshToken((t) => t + 1);
-  }, []);
+  const handleEditDelete = useCallback(
+    async (id: string) => {
+      await transactionApi.deleteTransaction(id);
+      setRefreshToken((t) => t + 1);
+      // Refresh user profile so the balance reflects the removed transaction
+      reloadProfile();
+    },
+    [reloadProfile],
+  );
 
   return {
     authLoading,
