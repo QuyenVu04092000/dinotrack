@@ -1,17 +1,36 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SubCategory } from "app/types/category";
-import { formatAmountInput, parseAmountInput } from "app/utilities/common/functions";
+import {
+  formatAmountInput,
+  formatFinancialPeriodLabel,
+  getCurrentFinancialPeriodStart,
+  parseAmountInput,
+  parseMonthParam,
+  toMonthParam,
+} from "app/utilities/common/functions";
 import { budgetApi } from "app/services/budgetApi";
 import { extractErrorMessage } from "app/lib/apiClient";
 import type { UseCreateBudgetProps, UseCreateBudgetResult } from "app/types/budgets";
 import { useAuthContext } from "app/context/AuthContext";
 
-export const useCreateBudget = ({ category, setCategory }: UseCreateBudgetProps): UseCreateBudgetResult => {
+export const useCreateBudget = ({ category, setCategory, month }: UseCreateBudgetProps): UseCreateBudgetResult => {
   const router = useRouter();
   const { user } = useAuthContext();
+  const startDayMonth = user?.startDayMonth ?? 1;
+
+  const currentPeriodStart = useMemo(() => getCurrentFinancialPeriodStart(startDayMonth), [startDayMonth]);
+  // Budgets may target the current or an upcoming period; a missing, malformed
+  // or past ?month falls back to the current period
+  const targetMonth = useMemo(() => {
+    const requested = parseMonthParam(month);
+    return requested && requested >= currentPeriodStart ? requested : currentPeriodStart;
+  }, [month, currentPeriodStart]);
+  const targetMonthParam = toMonthParam(targetMonth);
+  const targetPeriodLabel = formatFinancialPeriodLabel(targetMonth, startDayMonth);
+  const isCurrentPeriod = targetMonth.getTime() === currentPeriodStart.getTime();
 
   const [amountValue, setAmountValue] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,22 +63,6 @@ export const useCreateBudget = ({ category, setCategory }: UseCreateBudgetProps)
         return;
       }
 
-      // Determine \"financial\" month in YYYY-MM based on user's startDayMonth (like budgets list).
-      // Example: if startDayMonth = 10 and today is 9/03, period is 10/02–09/03 → monthString = 2026-02.
-      const now = new Date();
-      const startDay = user?.startDayMonth ?? 1;
-      let periodYear = now.getFullYear();
-      let periodMonth = now.getMonth(); // 0-11
-      if (now.getDate() < startDay) {
-        periodMonth -= 1;
-        if (periodMonth < 0) {
-          periodMonth = 11;
-          periodYear -= 1;
-        }
-      }
-      const monthNumber = periodMonth + 1;
-      const monthString = `${periodYear}-${String(monthNumber).padStart(2, "0")}`;
-
       setIsSubmitting(true);
       setSubmitError(null);
       setSubmitSuccess(false);
@@ -68,15 +71,19 @@ export const useCreateBudget = ({ category, setCategory }: UseCreateBudgetProps)
         await budgetApi.createBudget({
           subCategoryId: category.id,
           budget: budgetAmount,
-          month: monthString,
+          month: targetMonthParam,
         });
         const params = new URLSearchParams();
         params.set("subCategoryId", category.id);
 
         setSubmitSuccess(true);
-        // Navigate back after successful creation
+        // Current period: show the sub-category's spending; upcoming period: return to that month's budgets
         setTimeout(() => {
-          router.push(`/transactions/category?${params.toString()}`);
+          router.push(
+            isCurrentPeriod
+              ? `/transactions/category?${params.toString()}`
+              : `/budgets?month=${targetMonthParam}`,
+          );
         }, 1000);
       } catch (error) {
         const message = extractErrorMessage(error);
@@ -85,7 +92,7 @@ export const useCreateBudget = ({ category, setCategory }: UseCreateBudgetProps)
         setIsSubmitting(false);
       }
     },
-    [category, amountValue, router, user?.startDayMonth],
+    [category, amountValue, router, targetMonthParam, isCurrentPeriod],
   );
 
   const isFormValid = Boolean(category && category.id && amountValue.trim().length > 0);
@@ -96,6 +103,7 @@ export const useCreateBudget = ({ category, setCategory }: UseCreateBudgetProps)
     isSubmitting,
     submitError,
     submitSuccess,
+    targetPeriodLabel,
     handleBack,
     handleAmountChange,
     handleSubmit,
