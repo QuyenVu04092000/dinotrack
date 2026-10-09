@@ -8,7 +8,7 @@ import { imagePath } from "app/utilities/constants/common/assets";
 import { useFooter } from "app/context/FooterContext";
 import type { CreateBudgetProps } from "app/types/budgets";
 
-export default function CreateBudget({ category, setCategory }: CreateBudgetProps) {
+export default function CreateBudget({ category, setCategory, month }: CreateBudgetProps) {
   const { setFooterVisible } = useFooter();
   const {
     amountValue,
@@ -16,10 +16,11 @@ export default function CreateBudget({ category, setCategory }: CreateBudgetProp
     isSubmitting,
     submitError,
     submitSuccess,
+    targetPeriodLabel,
     handleBack,
     handleAmountChange,
     handleSubmit,
-  } = useCreateBudget({ category, setCategory });
+  } = useCreateBudget({ category, setCategory, month });
 
   // Hide footer on this page
   useEffect(() => {
@@ -95,6 +96,12 @@ export default function CreateBudget({ category, setCategory }: CreateBudgetProp
                 </div>
               </div>
             </button>
+          </div>
+
+          {/* Target period */}
+          <div className="flex items-center justify-between rounded-3xl bg-[#E0F5FE] px-3 py-2">
+            <span className="text-xs font-normal text-[#3B4D69]">Áp dụng cho:</span>
+            <span className="text-sm font-semibold text-[#0046B0]">{targetPeriodLabel}</span>
           </div>
 
           {/* Amount row */}

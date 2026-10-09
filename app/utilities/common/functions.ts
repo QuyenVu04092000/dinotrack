@@ -76,6 +76,44 @@ export function getCurrentFinancialPeriodStart(startDayMonth: number): Date {
   }
   return new Date(year, month, 1);
 }
+/**
+ * Formats a month anchor as the `YYYY-MM` value the budget API expects.
+ *
+ * @param monthAnchor - Any date in the target month (normally day 1)
+ */
+export function toMonthParam(monthAnchor: Date): string {
+  return `${monthAnchor.getFullYear()}-${String(monthAnchor.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Parses a `YYYY-MM` string into a month anchor (day 1), or returns null when malformed.
+ *
+ * @param value - Month string such as "2026-08"
+ */
+export function parseMonthParam(value: string | null | undefined): Date | null {
+  const match = value?.match(/^(\d{4})-(0[1-9]|1[0-2])$/);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, 1);
+}
+
+/**
+ * Builds the financial period label for a month, e.g. "Tháng 8 (10/8-09/9)".
+ * Periods outside the current calendar year include the year: "Tháng 1/2027 (01/1-31/1)".
+ *
+ * @param monthAnchor - Any date in the period's month (normally day 1)
+ * @param startDayMonth - The day of month the financial period starts
+ */
+export function formatFinancialPeriodLabel(monthAnchor: Date, startDayMonth: number): string {
+  const year = monthAnchor.getFullYear();
+  const monthIndex = monthAnchor.getMonth();
+  const startDate = new Date(year, monthIndex, startDayMonth);
+  const endDate = new Date(year, monthIndex + 1, startDayMonth - 1);
+  const d1 = String(startDate.getDate()).padStart(2, "0");
+  const d2 = String(endDate.getDate()).padStart(2, "0");
+  const yearSuffix = year === new Date().getFullYear() ? "" : `/${year}`;
+  return `Tháng ${monthIndex + 1}${yearSuffix} (${d1}/${startDate.getMonth() + 1}-${d2}/${endDate.getMonth() + 1})`;
+}
+
 // Build an ISO 8601 string with Vietnam +07:00 offset from a YYYY-MM-DD date and
 // an optional HH:mm:ss time. Defaults to current local time when time is omitted.
 export const toVietnamISO = (date: string, time?: string): string => {

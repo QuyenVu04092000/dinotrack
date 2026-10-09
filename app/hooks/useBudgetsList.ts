@@ -1,11 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuthContext } from "app/context/AuthContext";
 import { useCategories } from "app/hooks/useCategories";
 import { budgetApi } from "app/services/budgetApi";
 import { extractErrorMessage } from "app/lib/apiClient";
-import { getCurrentFinancialPeriodStart } from "app/utilities/common/functions";
+import {
+  formatFinancialPeriodLabel,
+  getCurrentFinancialPeriodStart,
+  parseMonthParam,
+  toMonthParam,
+} from "app/utilities/common/functions";
 import type { CategoryBudgets, UseBudgetsListResult } from "app/types/budgets";
 
 const CATEGORY_COLORS = [
@@ -18,6 +24,11 @@ const CATEGORY_COLORS = [
   "linear-gradient(180deg, #E0F2F1 0%, rgba(178, 223, 219, 0.15) 100%)",
   "linear-gradient(180deg, #FFF8E1 0%, rgba(255, 236, 179, 0.15) 100%)",
 ];
+
+/** How many months past the current financial period a budget can be planned for. */
+const MAX_FUTURE_MONTHS = 12;
+
+const monthIndexOf = (d: Date) => d.getFullYear() * 12 + d.getMonth();
 
 const getCategoryColor = (id: string) => {
   let hash = 0;
@@ -37,34 +48,30 @@ export const useBudgetsList = (): UseBudgetsListResult => {
     [startDayMonth],
   );
 
-  const [selectedMonth, setSelectedMonth] = useState<Date>(currentPeriodStart);
+  const searchParams = useSearchParams();
+  const requestedMonth = parseMonthParam(searchParams.get("month"));
+
+  const [selectedMonth, setSelectedMonth] = useState<Date>(requestedMonth ?? currentPeriodStart);
   const [budgets, setBudgets] = useState<Awaited<ReturnType<typeof budgetApi.getBudgetsSubCategories>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync selectedMonth when startDayMonth changes (e.g. after reloadProfile)
+  // Sync selectedMonth when startDayMonth changes (e.g. after reloadProfile),
+  // unless the page was opened on a specific month via ?month=YYYY-MM
   useEffect(() => {
+    if (requestedMonth) return;
     setSelectedMonth(getCurrentFinancialPeriodStart(startDayMonth));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDayMonth]);
 
-  const { monthParam, periodLabel } = useMemo(() => {
-    const year = selectedMonth.getFullYear();
-    const monthNum = selectedMonth.getMonth() + 1;
-    const startDate = new Date(year, selectedMonth.getMonth(), startDayMonth);
-    const endDate = new Date(year, selectedMonth.getMonth() + 1, startDayMonth - 1);
-    const d1 = String(startDate.getDate()).padStart(2, "0");
-    const m1 = startDate.getMonth() + 1;
-    const d2 = String(endDate.getDate()).padStart(2, "0");
-    const m2 = endDate.getMonth() + 1;
-    return {
-      monthParam: `${year}-${String(monthNum).padStart(2, "0")}`,
-      periodLabel: `Tháng ${monthNum} (${d1}/${m1}-${d2}/${m2})`,
-    };
-  }, [selectedMonth, startDayMonth]);
+  const monthParam = toMonthParam(selectedMonth);
+  const periodLabel = formatFinancialPeriodLabel(selectedMonth, startDayMonth);
 
-  const isCurrentMonth =
-    selectedMonth.getFullYear() === currentPeriodStart.getFullYear() &&
-    selectedMonth.getMonth() === currentPeriodStart.getMonth();
+  const monthOffset = monthIndexOf(selectedMonth) - monthIndexOf(currentPeriodStart);
+  const isCurrentMonth = monthOffset === 0;
+  const isFutureMonth = monthOffset > 0;
+  const canCreateBudget = monthOffset >= 0;
+  const isNextDisabled = monthOffset >= MAX_FUTURE_MONTHS;
 
   const hasStartDayMonth = Boolean(user?.startDayMonth);
 
@@ -124,8 +131,12 @@ export const useBudgetsList = (): UseBudgetsListResult => {
     loading,
     error,
     periodLabel,
+    monthParam,
     budgetsByCategory,
     isCurrentMonth,
+    isFutureMonth,
+    canCreateBudget,
+    isNextDisabled,
     hasStartDayMonth,
     goToPrevMonth,
     goToNextMonth,
